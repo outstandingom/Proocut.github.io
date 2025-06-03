@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProCut | Book Service</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        :root {
+            --primary: #000;
+            --secondary: #8a6d3b;
+            --light: #f9f9f9;
+            --accent: #ff6b6b;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #fff;
+            color: var(--primary);
+            padding-bottom: 70px;
+        }
+        
+        .booking-header {
+            background-color: var(--light);
+            padding: 20px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .service-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+        
+        .booking-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .booking-steps::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: #e0e0e0;
+            z-index: 1;
+        }
+        
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #e0e0e0;
+            color: #777;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .step.active .step-number {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .step-label {
+            font-size: 14px;
+            color: #777;
+        }
+        
+        .step.active .step-label {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .time-slot {
+            padding: 10px 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .time-slot:hover {
+            border-color: var(--secondary);
+        }
+        
+        .time-slot.selected {
+            background-color: var(--secondary);
+            color: white;
+            border-color: var(--secondary);
+        }
+        
+        .time-slots-container {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -5px;
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #fff;
+            box-shadow: 0 -2px 15px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+        
+        .nav-item {
+            padding: 12px 0;
+            text-align: center;
+            color: #777;
+            transition: all 0.3s;
+        }
+        
+        .nav-item.active, .nav-item:hover {
+            color: var(--primary);
+        }
+        
+        .nav-item i {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        
+        .nav-text {
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="sticky-top bg-white shadow-sm">
+        <div class="container py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="logo">Pro<span>Cut</span></div>
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-arrow-left me-3" style="font-size: 20px; cursor: pointer;" onclick="history.back()"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Booking Steps -->
+        <div class="booking-header">
+            <div class="container">
+                <div class="booking-steps">
+                    <div class="step active">
+                        <div class="step-number">1</div>
+                        <div class="step-label">Service</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-label">Date & Time</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-label">Confirm</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container py-4">
+        <!-- Service Details -->
+        <div id="serviceDetails">
+            <div class="row">
+                <div class="col-md-5 mb-4 mb-md-0">
+                    <img id="serviceImage" src="https://via.placeholder.com/300x200" class="service-image" alt="Service">
+                </div>
+                <div class="col-md-7">
+                    <h3 id="serviceName">Service Name</h3>
+                    <p class="text-muted mb-3" id="serviceCategory">Category</p>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="me-4">
+                            <i class="fas fa-clock me-2"></i>
+                            <span id="serviceDuration">60 mins</span>
+                        </div>
+                        <div>
+                            <i class="fas fa-rupee-sign me-2"></i>
+                            <span class="h5" id="servicePrice">₹999</span>
+                        </div>
+                    </div>
+                    <p class="mb-4" id="serviceDescription">Service description goes here...</p>
+                    <button class="btn btn-primary w-100" id="nextStepBtn">Next: Select Date & Time</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Date & Time Selection -->
+        <div id="dateTimeSelection" style="display: none;">
+            <h4 class="mb-4">Select Date & Time</h4>
+            
+            <div class="row">
+                <div class="col-md-5 mb-4 mb-md-0">
+                    <div class="mb-3">
+                        <label for="bookingDate" class="form-label">Select Date</label>
+                        <input type="text" class="form-control" id="bookingDate" placeholder="Select date">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Available Time Slots</label>
+                        <div class="time-slots-container" id="timeSlotsContainer">
+                            <!-- Time slots will be dynamically added here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-7">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Booking Summary</h5>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Service:</span>
+                                <span id="summaryServiceName">-</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Duration:</span>
+                                <span id="summaryServiceDuration">-</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Price:</span>
+                                <span id="summaryServicePrice">-</span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between mb-3">
+                                <span class="text-muted">Date & Time:</span>
+                                <span id="summaryDateTime">Not selected</span>
+                            </div>
+                            <button class="btn btn-outline-secondary w-100 mb-3" id="backToServiceBtn">
+                                <i class="fas fa-arrow-left me-2"></i> Back to Service
+                            </button>
+                            <button class="btn btn-primary w-100" id="nextToConfirmBtn" disabled>
+                                Next: Confirm Booking
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Confirm Booking -->
+        <div id="confirmBooking" style="display: none;">
+            <h4 class="mb-4">Confirm Your Booking</h4>
+            
+            <div class="row">
+                <div class="col-md-7 mb-4 mb-md-0">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Booking Details</h5>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Service:</span>
+                                <span id="confirmServiceName">-</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Date & Time:</span>
+                                <span id="confirmDateTime">-</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Duration:</span>
+                                <span id="confirmDuration">-</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Price:</span>
+                                <span id="confirmPrice">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Additional Notes</h5>
+                            <textarea class="form-control" id="bookingNotes" rows="3" placeholder="Any special requests or notes..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-5">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Payment Summary</h5>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Service Price:</span>
+                                <span id="paymentServicePrice">-</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Taxes:</span>
+                                <span>₹0</span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between mb-3">
+                                <span class="text-muted">Total Amount:</span>
+                                <span class="h5" id="paymentTotalAmount">-</span>
+                            </div>
+                            
+                            <form id="bookingForm">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="termsAgree" required>
+                                    <label class="form-check-label" for="termsAgree">
+                                        I agree to the <a href="#">Terms & Conditions</a>
+                                    </label>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary w-100">
+                                    Confirm & Pay
+                                </button>
+                            </form>
+                            
+                            <button class="btn btn-outline-secondary w-100 mt-3" id="backToTimeBtn">
+                                <i class="fas fa-arrow-left me-2"></i> Back to Time Selection
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav d-md-none">
+        <div class="container d-flex justify-content-around">
+            <a href="index.html" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span class="nav-text">Home</span>
+            </a>
+            <a href="userbookings.html" class="nav-item">
+                <i class="fas fa-calendar"></i>
+                <span class="nav-text">Bookings</span>
+            </a>
+            <a href="userprofile.html" class="nav-item">
+                <i class="fas fa-user"></i>
+                <span class="nav-text">Profile</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/11.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.8.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Flatpickr for date/time selection -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Main JS -->
+    <script src="main.js"></script>
+    
+    <script>
+        // Initialize date picker
+        const datePicker = flatpickr("#bookingDate", {
+            minDate: "today",
+            maxDate: new Date().fp_incr(30), // 30 days from now
+            disable: [
+                function(date) {
+                    // Disable Sundays
+                    return (date.getDay() === 0);
+                }
+            ]
+        });
+        
+        // Generate time slots
+        function generateTimeSlots() {
+            const container = document.getElementById('timeSlotsContainer');
+            container.innerHTML = '';
+            
+            // Salon working hours: 10AM to 8PM
+            const startHour = 10;
+            const endHour = 20;
+            
+            for (let hour = startHour; hour < endHour; hour++) {
+                // Create slots every 30 minutes
+                for (let minutes of ['00', '30']) {
+                    const time = `${hour}:${minutes}`;
+                    const timeSlot = document.createElement('div');
+                    timeSlot.className = 'time-slot';
+                    timeSlot.textContent = time;
+                    timeSlot.addEventListener('click', function() {
+                        document.querySelectorAll('.time-slot').forEach(slot => {
+                            slot.classList.remove('selected');
+                        });
+                        this.classList.add('selected');
+                        
+                        // Update selected time
+                        const selectedDate = datePicker.selectedDates[0];
+                        if (selectedDate) {
+                            const [hours, mins] = time.split(':');
+                            selectedDate.setHours(parseInt(hours), parseInt(mins));
+                            document.getElementById('summaryDateTime').textContent = 
+                                selectedDate.toLocaleString('en-US', {
+                                    weekday: 'short',
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                });
+                            
+                            document.getElementById('nextToConfirmBtn').disabled = false;
+                        }
+                    });
+                    
+                    container.appendChild(timeSlot);
+                }
+            }
+        }
+        
+        // Event listeners for navigation between steps
+        document.getElementById('nextStepBtn').addEventListener('click', function() {
+            document.getElementById('serviceDetails').style.display = 'none';
+            document.getElementById('dateTimeSelection').style.display = 'block';
+            
+            // Update steps UI
+            document.querySelectorAll('.step').forEach((step, index) => {
+                if (index === 1) {
+                    step.classList.add('active');
+                } else {
+                    step.classList.remove('active');
+                }
+            });
+            
+            // Generate time slots when date is selected
+            datePicker.config.onChange.push(function() {
+                generateTimeSlots();
+                document.getElementById('summaryDateTime').textContent = 'Not selected';
+                document.getElementById('nextToConfirmBtn').disabled = true;
+            });
+        });
+        
+        document.getElementById('backToServiceBtn').addEventListener('click', function() {
+            document.getElementById('serviceDetails').style.display = 'block';
+            document.getElementById('dateTimeSelection').style.display = 'none';
+            
+            // Update steps UI
+            document.querySelectorAll('.step').forEach((step, index) => {
+                if (index === 0) {
+                    step.classList.add('active');
+                } else {
+                    step.classList.remove('active');
+                }
+            });
+        });
+        
+        document.getElementById('nextToConfirmBtn').addEventListener('click', function() {
+            document.getElementById('dateTimeSelection').style.display = 'none';
+            document.getElementById('confirmBooking').style.display = 'block';
+            
+            // Update steps UI
+            document.querySelectorAll('.step').forEach((step, index) => {
+                if (index === 2) {
+                    step.classList.add('active');
+                } else {
+                    step.classList.remove('active');
+                }
+            });
+            
+            // Update confirmation details
+            const selectedDate = datePicker.selectedDates[0];
+            document.getElementById('confirmDateTime').textContent = 
+                selectedDate.toLocaleString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+        });
+        
+        document.getElementById('backToTimeBtn').addEventListener('click', function() {
+            document.getElementById('dateTimeSelection').style.display = 'block';
+            document.getElementById('confirmBooking').style.display = 'none';
+            
+            // Update steps UI
+            document.querySelectorAll('.step').forEach((step, index) => {
+                if (index === 1) {
+                    step.classList.add('active');
+                } else {
+                    step.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
