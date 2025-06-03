@@ -527,4 +527,74 @@ function createMerchantBookingCard(booking, id) {
                             <button class="btn btn-danger update-status" data-booking-id="${id}" data-status="cancelled">Cancel</button>
                         ` : ''}
                         ${booking.status === 'confirmed' ? `
-                            <button class="btn btn-primary update-status" data-booking-id="${id}" data-status="completed"
+                            <button class="btn btn-primary update-status" data-booking-id="${id}" data-status="completed">Mark Complete</button>
+                        ` : ''}
+                        <button class="btn btn-dark">View Details</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    card.querySelectorAll('.update-status').forEach(button => {
+        button.addEventListener('click', function() {
+            const bookingId = this.getAttribute('data-booking-id');
+            const newStatus = this.getAttribute('data-status');
+            updateBookingStatus(bookingId, newStatus);
+        });
+    });
+    
+    return card;
+}
+
+function getStatusClass(status) {
+    switch(status.toLowerCase()) {
+        case 'confirmed':
+            return 'status-confirmed';
+        case 'pending':
+            return 'status-pending';
+        case 'cancelled':
+            return 'status-cancelled';
+        case 'completed':
+            return 'status-completed';
+        default:
+            return '';
+    }
+}
+
+async function cancelBooking(bookingId) {
+    if (confirm('Are you sure you want to cancel this booking?')) {
+        try {
+            await db.collection('bookings').doc(bookingId).update({
+                status: 'cancelled',
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            showAlert('success', 'Booking cancelled successfully!');
+            loadUserBookings();
+        } catch (error) {
+            console.error('Error cancelling booking:', error);
+            showAlert('error', 'Failed to cancel booking. Please try again.');
+        }
+    }
+}
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+    alertDiv.setAttribute('role', 'alert');
+    alertDiv.style.zIndex = '9999';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.classList.remove('show');
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 150);
+    }, 3000);
+    }
