@@ -15,6 +15,17 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 
+// ️ moCK DATA HERE (development only)
+if (window.location.hostname === "localhost") {
+  const mockSalon = {
+    name: "Test Salon",
+    ownerId: "test",
+    location: "Test Location",
+    openTime: "09:00",
+    closeTime: "19:00"
+  };
+    
+
 // Global variables
 let currentUser = null;
 let selectedSalon = null;
