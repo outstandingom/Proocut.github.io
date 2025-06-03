@@ -13,6 +13,292 @@
     <script src="main.js" defer></script>
     <style>
         /* ... existing CSS remains unchanged ... */
+        :root {
+            --primary: #000;
+            --secondary: #8a6d3b;
+            --light: #f9f9f9;
+            --accent: #ff6b6b;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #fff;
+            color: #000;
+            padding-bottom: 70px;
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .logo span {
+            color: var(--secondary);
+        }
+        
+        .location-indicator {
+            background: rgba(138, 109, 59, 0.1);
+            border-radius: 20px;
+            padding: 5px 15px;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        
+        .location-indicator:hover {
+            background: rgba(138, 109, 59, 0.2);
+            cursor: pointer;
+        }
+        
+        .search-container {
+            position: relative;
+            display: flex;
+            margin: 15px 0;
+        }
+        
+        .search-container input {
+            padding: 12px 20px 12px 45px;
+            border-radius: 30px;
+            border: 1px solid #e0e0e0;
+            flex-grow: 1;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .search-container input:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(138, 109, 59, 0.2);
+            outline: none;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #777;
+            font-size: 18px;
+        }
+        
+        .search-button {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 0 25px;
+            margin-left: 10px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(138, 109, 59, 0.3);
+        }
+        
+        .search-button:hover {
+            background-color: #7a5f32;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(138, 109, 59, 0.4);
+        }
+        
+        .search-button:active {
+            transform: translateY(0);
+        }
+        
+        .category {
+            white-space: nowrap;
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: 1px solid #e0e0e0;
+            background: #f9f9f9;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .category.active, .category:hover {
+            background-color: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+        
+        .service-card {
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            height: 100%;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        
+        .service-img {
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #777;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .service-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        
+        .service-card:hover .service-img img {
+            transform: scale(1.05);
+        }
+        
+        .service-img .category-tag {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--accent);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background-color: #333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .featured-banner {
+            background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(50,50,50,0.85) 100%);
+            color: white;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .featured-banner h1 {
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .featured-banner p {
+            opacity: 0.9;
+            margin-bottom: 20px;
+            max-width: 500px;
+        }
+        
+        .section-title {
+            position: relative;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: var(--secondary);
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #fff;
+            box-shadow: 0 -2px 15px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+        
+        .nav-item {
+            padding: 12px 0;
+            text-align: center;
+            color: #777;
+            transition: all 0.3s;
+        }
+        
+        .nav-item.active, .nav-item:hover {
+            color: var(--primary);
+        }
+        
+        .nav-item i {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        
+        .nav-text {
+            font-size: 12px;
+        }
+        
+        .location-modal .modal-content {
+            border-radius: 20px;
+            overflow: hidden;
+        }
+        
+        .location-header {
+            background: linear-gradient(135deg, var(--secondary) 0%, #a1885d 100%);
+            color: white;
+            padding: 20px;
+        }
+        
+        .location-option {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .location-option:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .location-option i {
+            margin-right: 15px;
+            color: var(--secondary);
+        }
+        
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 24px;
+            }
+            
+            .featured-banner {
+                padding: 20px;
+            }
+            
+            .featured-banner h1 {
+                font-size: 24px;
+            }
+            
+            .search-button {
+                padding: 0 20px;
+            }
+            
+            .search-container input {
+                padding-left: 40px;
+            }
+        }
     </style>
 </head>
 <body>
