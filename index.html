@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProCut | Premium Salon Services</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="main.js" defer></script>
+    <style>
+        /* ... existing CSS remains unchanged ... */
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="sticky-top bg-white shadow-sm">
+        <div class="container py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="logo">Pro<span>Cut</span></div>
+                <div class="location-indicator" data-bs-toggle="modal" data-bs-target="#locationModal">
+                    <i class="fas fa-map-marker-alt me-2"></i>
+                    <span class="location-text">Neelbad Rd, Bhopal</span>
+                </div>
+                <!-- Add login indicator -->
+                <div id="authStatus" class="d-flex align-items-center">
+                    <span id="userEmail" class="me-2 d-none"></span>
+                    <button id="logoutBtn" class="btn btn-sm btn-outline-secondary d-none">
+                        <i class="fas fa-sign-out-alt me-1"></i> Logout
+                    </button>
+                    <button id="loginBtn" class="btn btn-sm btn-primary">
+                        <i class="fas fa-user me-1"></i> Login
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Enhanced Search Section -->
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" placeholder="Search for 'Haircut', 'Spa', 'Massage'...">
+                <button id="searchBtn" class="search-button">
+                    <i class="fas fa-search me-2"></i> Search
+                </button>
+            </div>
+        </div>
+        
+        <!-- Categories Navigation -->
+        <div class="container overflow-auto d-flex gap-3 py-2">
+            <div class="category active">All Services</div>
+            <div class="category">Women's Salon</div>
+            <div class="category">Men's Salon</div>
+            <div class="category">Hair Styling</div>
+            <div class="category">Hair Coloring</div>
+            <div class="category">Spa & Massage</div>
+            <div class="category">Facial & Skin Care</div>
+        </div>
+    </header>
+
+    <!-- ... rest of HTML remains unchanged ... -->
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav d-md-none">
+        <div class="container d-flex justify-content-around">
+            <a href="#" class="nav-item active">
+                <i class="fas fa-home"></i>
+                <span class="nav-text">Home</span>
+            </a>
+            <a href="userbookings.html" class="nav-item">
+                <i class="fas fa-calendar"></i>
+                <span class="nav-text">Bookings</span>
+            </a>
+            <a href="userprofile.html" class="nav-item">
+                <i class="fas fa-user"></i>
+                <span class="nav-text">Profile</span>
+            </a>
+        </div>
+    </nav>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+  </html>
