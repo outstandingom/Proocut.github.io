@@ -660,15 +660,7 @@ function navigateTo(page) {
 
 // index.html start
 // Initialize Firebase
-const firebaseConfig = {
-    apiKey: "AIzaSyCsJR-aYy0VGSPvb7pXHaK3EmGsJWcvdDo",
-    authDomain: "login-fa2eb.firebaseapp.com",
-    projectId: "login-fa2eb",
-    storageBucket: "login-fa2eb.appspot.com",
-    messagingSenderId: "1093052500996",
-    appId: "1:1093052500996:web:05a13485172c455e93b951",
-    measurementId: "G-9TC2J0YQ3R"
-};
+
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
@@ -2072,3 +2064,255 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 //  reset password end 
+//merchant profile.html
+// DOM Elements
+const merchantNameEl = document.getElementById('merchantName');
+const merchantEmailEl = document.getElementById('merchantEmail');
+const profileFullNameEl = document.getElementById('profileFullName');
+const profileEmailEl = document.getElementById('profileEmail');
+const profilePhoneEl = document.getElementById('profilePhone');
+const profileJoinDateEl = document.getElementById('profileJoinDate');
+const salonNameEl = document.getElementById('salonName');
+const salonDescriptionEl = document.getElementById('salonDescription');
+const salonAddressEl = document.getElementById('salonAddress');
+const salonHoursEl = document.getElementById('salonHours');
+const salonImageEl = document.getElementById('salonImage');
+const emailNotificationsEl = document.getElementById('emailNotifications');
+const pushNotificationsEl = document.getElementById('pushNotifications');
+
+// Firebase Auth State Listener
+firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+        // User is signed in
+        loadMerchantProfile(user.uid);
+        loadSalonInfo(user.uid);
+        loadNotificationPreferences(user.uid);
+    } else {
+        // No user is signed in, redirect to login
+        window.location.href = 'login.html';
+    }
+});
+
+/**
+ * Loads merchant profile data from Firestore
+ * @param {string} userId - The user ID of the logged-in merchant
+ */
+function loadMerchantProfile(userId) {
+    db.collection('merchants').doc(userId).get()
+        .then((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                
+                // Update profile header
+                merchantNameEl.textContent = data.fullName || 'No name provided';
+                merchantEmailEl.textContent = user.email;
+                
+                // Update profile tab
+                profileFullNameEl.textContent = data.fullName || 'No name provided';
+                profileEmailEl.textContent = user.email;
+                profilePhoneEl.textContent = data.phoneNumber || 'Not provided';
+                
+                // Format and display join date
+                if (data.createdAt) {
+                    const joinDate = data.createdAt.toDate();
+                    profileJoinDateEl.textContent = joinDate.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                } else {
+                    profileJoinDateEl.textContent = 'Unknown';
+                }
+            } else {
+                console.error('No merchant profile found');
+                showToast('No merchant profile found', 'error');
+            }
+        })
+        .catch((error) => {
+            console.error('Error loading merchant profile:', error);
+            showToast('Error loading profile data', 'error');
+        });
+}
+
+/**
+ * Loads salon information from Firestore
+ * @param {string} userId - The user ID of the logged-in merchant
+ */
+function loadSalonInfo(userId) {
+    db.collection('salons').where('ownerId', '==', userId).get()
+        .then((querySnapshot) => {
+            if (!querySnapshot.empty) {
+                const salonDoc = querySnapshot.docs[0];
+                const salonData = salonDoc.data();
+                
+                // Update salon information
+                salonNameEl.textContent = salonData.name || 'No salon name';
+                salonDescriptionEl.textContent = salonData.description || 'No description provided';
+                salonAddressEl.textContent = salonData.address || 'No address provided';
+                
+                // Format business hours
+                if (salonData.businessHours) {
+                    salonHoursEl.textContent = formatBusinessHours(salonData.businessHours);
+                } else {
+                    salonHoursEl.textContent = 'Not specified';
+                }
+                
+                // Load salon image if available
+                if (salonData.imageUrl) {
+                    salonImageEl.src = salonData.imageUrl;
+                }
+            } else {
+                console.log('No salon information found');
+                salonNameEl.textContent = 'No salon information found';
+            }
+        })
+        .catch((error) => {
+            console.error('Error loading salon info:', error);
+            showToast('Error loading salon information', 'error');
+        });
+}
+
+/**
+ * Formats business hours for display
+ * @param {Object} hours - Business hours object
+ * @returns {string} Formatted business hours string
+ */
+function formatBusinessHours(hours) {
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    let formattedHours = '';
+    
+    days.forEach(day => {
+        if (hours[day] && hours[day].open && hours[day].close) {
+            formattedHours += `${day}: ${hours[day].open} - ${hours[day].close}\n`;
+        } else {
+            formattedHours += `${day}: Closed\n`;
+        }
+    });
+    
+    return formattedHours;
+}
+
+/**
+ * Loads notification preferences from Firestore
+ * @param {string} userId - The user ID of the logged-in merchant
+ */
+function loadNotificationPreferences(userId) {
+    db.collection('merchant_preferences').doc(userId).get()
+        .then((doc) => {
+            if (doc.exists) {
+                const prefs = doc.data();
+                emailNotificationsEl.checked = prefs.emailNotifications !== false;
+                pushNotificationsEl.checked = prefs.pushNotifications !== false;
+            }
+        })
+        .catch((error) => {
+            console.error('Error loading preferences:', error);
+        });
+}
+
+/**
+ * Saves notification preferences to Firestore
+ */
+function saveNotificationPreferences() {
+    const userId = firebase.auth().currentUser.uid;
+    const preferences = {
+        emailNotifications: emailNotificationsEl.checked,
+        pushNotifications: pushNotificationsEl.checked,
+        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    
+    db.collection('merchant_preferences').doc(userId).set(preferences, { merge: true })
+        .then(() => {
+            showToast('Notification preferences saved', 'success');
+        })
+        .catch((error) => {
+            console.error('Error saving preferences:', error);
+            showToast('Error saving preferences', 'error');
+        });
+}
+
+/**
+ * Shows a toast notification
+ * @param {string} message - The message to display
+ * @param {string} type - The type of toast (success, error, etc.)
+ */
+function showToast(message, type = 'success') {
+    // Implement toast notification UI here
+    // This could use a library or custom implementation
+    console.log(`${type.toUpperCase()}: ${message}`);
+    alert(`${type.toUpperCase()}: ${message}`); // Temporary implementation
+}
+
+/**
+ * Handles account deletion
+ */
+function deleteAccount() {
+    const user = firebase.auth().currentUser;
+    
+    if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+        // First delete user data from Firestore
+        const batch = db.batch();
+        
+        // Delete merchant profile
+        batch.delete(db.collection('merchants').doc(user.uid));
+        
+        // Delete salon information (if exists)
+        db.collection('salons').where('ownerId', '==', user.uid).get()
+            .then((querySnapshot) => {
+                querySnapshot.forEach((doc) => {
+                    batch.delete(doc.ref);
+                });
+                
+                return batch.commit();
+            })
+            .then(() => {
+                // Then delete the auth account
+                return user.delete();
+            })
+            .then(() => {
+                showToast('Account deleted successfully', 'success');
+                window.location.href = 'index.html';
+            })
+            .catch((error) => {
+                console.error('Error deleting account:', error);
+                showToast('Error deleting account', 'error');
+            });
+    }
+}
+
+/**
+ * Initializes event listeners
+ */
+function initEventListeners() {
+    // Notification preference changes
+    emailNotificationsEl.addEventListener('change', saveNotificationPreferences);
+    pushNotificationsEl.addEventListener('change', saveNotificationPreferences);
+    
+    // Delete account button
+    const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+    if (deleteAccountBtn) {
+        deleteAccountBtn.addEventListener('click', deleteAccount);
+    }
+    
+    // Change password button
+    const changePasswordBtn = document.getElementById('changePasswordBtn');
+    if (changePasswordBtn) {
+        changePasswordBtn.addEventListener('click', () => {
+            window.location.href = 'resetpassword.html';
+        });
+    }
+    
+    // Edit salon button
+    const editSalonBtn = document.getElementById('editSalonBtn');
+    if (editSalonBtn) {
+        editSalonBtn.addEventListener('click', () => {
+            window.location.href = 'editsalon.html';
+        });
+    }
+}
+
+// Initialize the page
+document.addEventListener('DOMContentLoaded', () => {
+    initEventListeners();
+});
+// merchant profileend 
