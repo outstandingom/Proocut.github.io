@@ -2316,3 +2316,207 @@ document.addEventListener('DOMContentLoaded', () => {
     initEventListeners();
 });
 // merchant profileend 
+// merchant service
+// DOM Elements
+const servicesContainer = document.getElementById('servicesContainer');
+const addServiceBtn = document.getElementById('addServiceBtn');
+
+// Current user and salon reference
+let currentUser = null;
+let currentSalonId = null;
+
+// Initialize the page
+document.addEventListener('DOMContentLoaded', function() {
+    // Check auth state
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            currentUser = user;
+            loadMerchantData();
+        } else {
+            // Redirect to login if not authenticated
+            window.location.href = 'login.html';
+        }
+    });
+
+    // Add service button event
+    if (addServiceBtn) {
+        addServiceBtn.addEventListener('click', () => {
+            window.location.href = 'addservices.html';
+        });
+    }
+});
+
+// Load merchant data and services
+function loadMerchantData() {
+    // Get merchant's salon data
+    db.collection('merchants').doc(currentUser.uid).get()
+        .then(doc => {
+            if (doc.exists) {
+                currentSalonId = doc.data().salonId;
+                loadMerchantServices();
+            } else {
+                console.error('No merchant data found');
+                showEmptyState();
+            }
+        })
+        .catch(error => {
+            console.error('Error getting merchant data:', error);
+            showErrorState();
+        });
+}
+
+// Load merchant services
+function loadMerchantServices() {
+    if (!currentSalonId) {
+        showEmptyState();
+        return;
+    }
+
+    servicesContainer.innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    `;
+
+    db.collection('services')
+        .where('salonId', '==', currentSalonId)
+        .get()
+        .then(querySnapshot => {
+            if (querySnapshot.empty) {
+                showEmptyState();
+                return;
+            }
+
+            servicesContainer.innerHTML = '';
+            querySnapshot.forEach(doc => {
+                const service = doc.data();
+                renderServiceCard(doc.id, service);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading services:', error);
+            showErrorState();
+        });
+}
+
+// Render a service card
+function renderServiceCard(serviceId, service) {
+    const card = document.createElement('div');
+    card.className = 'service-card';
+    card.innerHTML = `
+        <div class="d-flex">
+            <div class="flex-shrink-0 me-3">
+                <img src="${service.imageUrl || 'https://via.placeholder.com/150'}" 
+                     alt="${service.name}" 
+                     class="service-image" style="width: 100px; height: 100px;">
+            </div>
+            <div class="flex-grow-1">
+                <h5>${service.name}</h5>
+                <p class="text-muted mb-1">${service.description || 'No description'}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="fw-bold">$${service.price.toFixed(2)}</span>
+                    <span class="badge bg-light text-dark">${service.duration} mins</span>
+                </div>
+                <div class="service-actions">
+                    <button class="btn btn-sm btn-outline-primary edit-btn" data-id="${serviceId}">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${serviceId}">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    servicesContainer.appendChild(card);
+
+    // Add event listeners to the buttons
+    card.querySelector('.edit-btn').addEventListener('click', () => {
+        window.location.href = `editsalon.html?id=${serviceId}`;
+    });
+
+    card.querySelector('.delete-btn').addEventListener('click', () => {
+        if (confirm('Are you sure you want to delete this service?')) {
+            deleteService(serviceId);
+        }
+    });
+}
+
+// Delete a service
+function deleteService(serviceId) {
+    db.collection('services').doc(serviceId).delete()
+        .then(() => {
+            alert('Service deleted successfully');
+            loadMerchantServices();
+        })
+        .catch(error => {
+            console.error('Error deleting service:', error);
+            alert('Failed to delete service');
+        });
+}
+
+// Show empty state
+function showEmptyState() {
+    servicesContainer.innerHTML = `
+        <div class="empty-state">
+            <i class="fas fa-scissors"></i>
+            <h4>No Services Added</h4>
+            <p class="text-muted">You haven't added any services yet. Click the button above to get started.</p>
+            <button class="btn btn-primary" id="addServiceBtnEmpty">
+                <i class="fas fa-plus me-2"></i> Add Your First Service
+            </button>
+        </div>
+    `;
+
+    // Add event listener to the empty state button
+    const addServiceBtnEmpty = document.getElementById('addServiceBtnEmpty');
+    if (addServiceBtnEmpty) {
+        addServiceBtnEmpty.addEventListener('click', () => {
+            window.location.href = 'addservices.html';
+        });
+    }
+}
+
+// Show error state
+function showErrorState() {
+    servicesContainer.innerHTML = `
+        <div class="empty-state">
+            <i class="fas fa-exclamation-triangle text-danger"></i>
+            <h4>Error Loading Services</h4>
+            <p class="text-muted">We couldn't load your services. Please try again later.</p>
+            <button class="btn btn-outline-primary" id="retryBtn">
+                <i class="fas fa-sync-alt me-2"></i> Try Again
+            </button>
+        </div>
+    `;
+
+    // Add event listener to the retry button
+    const retryBtn = document.getElementById('retryBtn');
+    if (retryBtn) {
+        retryBtn.addEventListener('click', loadMerchantServices);
+    }
+}
+
+// Navigation guard - prevent unauthorized access
+function checkAuthState() {
+    auth.onAuthStateChanged(user => {
+        if (!user) {
+            window.location.href = 'login.html';
+        } else {
+            // Check if user is a merchant
+            db.collection('merchants').doc(user.uid).get()
+                .then(doc => {
+                    if (!doc.exists) {
+                        window.location.href = '404error.html';
+                    }
+                });
+        }
+    });
+}
+
+// Initialize auth check
+checkAuthState();
+// merchnat service 
