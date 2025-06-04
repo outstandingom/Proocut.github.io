@@ -6,13 +6,9 @@
     <title>ProCut | Premium Salon Services</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
+  
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="main.js" defer></script>  <style>
         :root {
             --primary: #000;
             --secondary: #8a6d3b;
@@ -311,29 +307,21 @@
                     <i class="fas fa-map-marker-alt me-2"></i>
                     <span class="location-text">Neelbad Rd, Bhopal</span>
                 </div>
-                <div id="authStatus" class="d-flex align-items-center">
-                    <span id="userEmail" class="me-2 d-none"></span>
-                    <button id="logoutBtn" class="btn btn-sm btn-outline-secondary d-none">
-                        <i class="fas fa-sign-out-alt me-1"></i> Logout
-                    </button>
-                    <button id="loginBtn" class="btn btn-sm btn-primary">
-                        <i class="fas fa-user me-1"></i> Login
-                    </button>
-                </div>
             </div>
             
-            <!-- Search Section -->
-            <div class="search-container">
-                <i class="fas fa-search search-icon"></i>
-                <input type="text" id="searchInput" placeholder="Search for 'Haircut', 'Spa', 'Massage'...">
-                <button id="searchBtn" class="search-button">
-                    <i class="fas fa-search me-2"></i> Search
-                </button>
-            </div>
+            <!-- Enhanced Search Section -->
+            <!-- Replace your search container with this -->
+<div class="search-container">
+    <i class="fas fa-search search-icon"></i>
+    <input type="text" id="searchInput" placeholder="Search for 'Haircut', 'Spa', 'Massage'...">
+    <button class="search-button">
+        <i class="fas fa-search me-2"></i> Search
+    </button>
+</div>
         </div>
         
         <!-- Categories Navigation -->
-        <div class="container overflow-auto d-flex gap-3 py-2" id="categoriesContainer">
+        <div class="container overflow-auto d-flex gap-3 py-2">
             <div class="category active">All Services</div>
             <div class="category">Women's Salon</div>
             <div class="category">Men's Salon</div>
@@ -345,68 +333,117 @@
     </header>
 
     <!-- Main Content -->
-    <main class="container my-4">
+    <div class="container py-4">
         <!-- Featured Banner -->
         <div class="featured-banner">
-            <h1>Premium Salon Services</h1>
-            <p>Book your next beauty appointment with top-rated professionals in your area.</p>
-            <button class="btn btn-light">Explore Services</button>
+            <h1>Premium Hair Spa Treatment</h1>
+            <p>Revitalize your hair with our deep conditioning treatment that nourishes from root to tip. Experience luxury haircare with visible results.</p>
+            <button class="btn btn-light rounded-pill px-4 py-2 fw-bold">Book Now</button>
         </div>
-
-        <!-- Popular Services Section -->
-        <div class="mb-5">
-            <h2 class="section-title">Popular Services</h2>
-            <div class="row g-4" id="popularServices">
-                <!-- Services will be loaded here dynamically -->
-                <div class="col-12 text-center py-4">
-                    <div class="spinner-border text-secondary" role="status">
-                        <span class="visually-hidden">Loading...</span>
+        
+        <!-- Popular Services -->
+        <h3 class="section-title">Popular Salon Services</h3>
+        <div class="row g-4">
+            <!-- Service 1 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="service-card">
+                    <div class="service-img">
+                        <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1674" alt="Women's Haircut">
+                        <div class="category-tag">Women</div>
+                    </div>
+                    <div class="p-4">
+                        <h5>Women's Haircut & Styling</h5>
+                        <p class="text-muted small mb-3">Professional haircut with blow dry and styling by our expert stylists.</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="text-warning">
+                                <i class="fas fa-star"></i> 4.8 <span class="text-muted">(124)</span>
+                            </div>
+                            <div>
+                                <span class="text-muted text-decoration-line-through me-2">₹999</span>
+                                <strong class="h5">₹799</strong>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary w-100 mt-3">Book Appointment</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Service 2 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="service-card">
+                    <div class="service-img">
+                        <img src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=1740" alt="Men's Haircut">
+                        <div class="category-tag">Men</div>
+                    </div>
+                    <div class="p-4">
+                        <h5>Men's Haircut & Shave</h5>
+                        <p class="text-muted small mb-3">Classic haircut and traditional shaving experience with hot towels.</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="text-warning">
+                                <i class="fas fa-star"></i> 4.6 <span class="text-muted">(89)</span>
+                            </div>
+                            <strong class="h5">₹499</strong>
+                        </div>
+                        <button class="btn btn-primary w-100 mt-3">Book Appointment</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Service 3 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="service-card">
+                    <div class="service-img">
+                        <img src="https://images.unsplash.com/photo-1599351431405-41ecca4ccb20?q=80&w=1740" alt="Hair Coloring">
+                        <div class="category-tag">Coloring</div>
+                    </div>
+                    <div class="p-4">
+                        <h5>Premium Hair Coloring</h5>
+                        <p class="text-muted small mb-3">Expert hair coloring with ammonia-free products for vibrant results.</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="text-warning">
+                                <i class="fas fa-star"></i> 4.7 <span class="text-muted">(76)</span>
+                            </div>
+                            <div>
+                                <span class="text-muted text-decoration-line-through me-2">₹2499</span>
+                                <strong class="h5">₹1899</strong>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary w-100 mt-3">Book Appointment</button>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- Nearby Salons Section -->
-        <div class="mb-5">
-            <h2 class="section-title">Nearby Salons</h2>
-            <div class="row g-4" id="nearbySalons">
-                <!-- Salons will be loaded here dynamically -->
-                <div class="col-12 text-center py-4">
-                    <div class="spinner-border text-secondary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
+        
+        
+         
 
     <!-- Location Modal -->
-    <div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true">
+    <div class="modal fade location-modal" id="locationModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content location-modal">
+            <div class="modal-content">
                 <div class="location-header">
-                    <h5 class="modal-title" id="locationModalLabel">Select Your Location</h5>
+                    <h5 class="modal-title">Select Your Location</h5>
+                    <p class="mb-0">Choose your preferred salon location</p>
                 </div>
                 <div class="modal-body p-0">
-                    <div class="location-option">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>Neelbad Rd, Bhopal</span>
+                    <div class="location-option" data-location="Neelbad Rd, Bhopal">
+                        <i class="fas fa-map-marker-alt"></i> Neelbad Rd, Bhopal (Current)
                     </div>
-                    <div class="location-option">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>MP Nagar, Bhopal</span>
+                    <div class="location-option" data-location="MP Nagar, Bhopal">
+                        <i class="fas fa-map-marker-alt"></i> MP Nagar, Bhopal
                     </div>
-                    <div class="location-option">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>Arera Colony, Bhopal</span>
+                    <div class="location-option" data-location="New Market, Bhopal">
+                        <i class="fas fa-map-marker-alt"></i> New Market, Bhopal
                     </div>
-                    <div class="location-option">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>Kolar Road, Bhopal</span>
+                    <div class="location-option" data-location="Arera Colony, Bhopal">
+                        <i class="fas fa-map-marker-alt"></i> Arera Colony, Bhopal
+                    </div>
+                    <div class="location-option" data-location="Kolar Road, Bhopal">
+                        <i class="fas fa-map-marker-alt"></i> Kolar Road, Bhopal
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 </div>
             </div>
         </div>
@@ -415,10 +452,11 @@
     <!-- Bottom Navigation -->
     <nav class="bottom-nav d-md-none">
         <div class="container d-flex justify-content-around">
-            <a href="index.html" class="nav-item active">
+            <a href="#" class="nav-item active">
                 <i class="fas fa-home"></i>
                 <span class="nav-text">Home</span>
             </a>
+
             <a href="userbookings.html" class="nav-item">
                 <i class="fas fa-calendar"></i>
                 <span class="nav-text">Bookings</span>
@@ -430,218 +468,12 @@
         </div>
     </nav>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="main.js"></script>
-    <script>
-        // Initialize page-specific functionality
-        document.addEventListener('DOMContentLoaded', () => {
-            // Load services and salons
-            loadPopularServices();
-            loadNearbySalons();
-            
-            // Set up event listeners
-            document.getElementById('searchBtn').addEventListener('click', searchServices);
-            document.getElementById('searchInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') searchServices();
-            });
+        <!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/11.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.8.0/firebase-firestore-compat.js"></script>
 
-            // Category selection
-            document.getElementById('categoriesContainer').addEventListener('click', (e) => {
-                if (e.target.classList.contains('category')) {
-                    document.querySelector('.category.active').classList.remove('active');
-                    e.target.classList.add('active');
-                    filterServicesByCategory(e.target.textContent);
-                }
-            });
-
-            // Location selection
-            document.querySelectorAll('.location-option').forEach(option => {
-                option.addEventListener('click', () => {
-                    document.querySelector('.location-text').textContent = option.querySelector('span').textContent;
-                    filterByLocation(option.querySelector('span').textContent);
-                });
-            });
-        });
-
-        // Page-specific functions
-        function loadPopularServices() {
-            db.collection('services').limit(6).get()
-                .then(querySnapshot => {
-                    const popularServices = document.getElementById('popularServices');
-                    popularServices.innerHTML = '';
-                    
-                    if (querySnapshot.empty) {
-                        popularServices.innerHTML = '<div class="col-12 text-center py-4"><h5>No services available</h5></div>';
-                        return;
-                    }
-                    
-                    querySnapshot.forEach(doc => {
-                        const service = doc.data();
-                        popularServices.innerHTML += createServiceCard(service, doc.id);
-                    });
-                })
-                .catch(error => {
-                    console.error("Error loading services: ", error);
-                    document.getElementById('popularServices').innerHTML = 
-                        '<div class="col-12 text-center py-4"><h5>Error loading services</h5></div>';
-                });
-        }
-
-        function loadNearbySalons() {
-            db.collection('salons').limit(4).get()
-                .then(querySnapshot => {
-                    const nearbySalons = document.getElementById('nearbySalons');
-                    nearbySalons.innerHTML = '';
-                    
-                    if (querySnapshot.empty) {
-                        nearbySalons.innerHTML = '<div class="col-12 text-center py-4"><h5>No salons available</h5></div>';
-                        return;
-                    }
-                    
-                    querySnapshot.forEach(doc => {
-                        const salon = doc.data();
-                        nearbySalons.innerHTML += createSalonCard(salon, doc.id);
-                    });
-                })
-                .catch(error => {
-                    console.error("Error loading salons: ", error);
-                    document.getElementById('nearbySalons').innerHTML = 
-                        '<div class="col-12 text-center py-4"><h5>Error loading salons</h5></div>';
-                });
-        }
-
-        function createServiceCard(service, id) {
-            return `
-                <div class="col-md-4 col-sm-6">
-                    <div class="service-card">
-                        <div class="service-img">
-                            <img src="${service.image || 'https://via.placeholder.com/300x180?text=Service'}" alt="${service.name}">
-                            <span class="category-tag">${service.category || 'General'}</span>
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title">${service.name}</h5>
-                            <p class="card-text">${service.description || 'Premium salon service'}</p>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="fw-bold">₹${service.price || '299'}</span>
-                                <a href="bookservice.html?serviceId=${id}" class="btn btn-primary btn-sm">Book Now</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function createSalonCard(salon, id) {
-            return `
-                <div class="col-md-3 col-sm-6">
-                    <div class="service-card">
-                        <div class="service-img">
-                            <img src="${salon.image || 'https://via.placeholder.com/300x180?text=Salon'}" alt="${salon.name}">
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title">${salon.name}</h5>
-                            <p class="card-text text-muted">
-                                <i class="fas fa-map-marker-alt me-1"></i> ${salon.address || 'Bhopal'}
-                            </p>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="rating">
-                                    <i class="fas fa-star text-warning"></i>
-                                    <span>${salon.rating || '4.5'}</span>
-                                </div>
-                                <a href="bookservice.html?salonId=${id}" class="btn btn-primary btn-sm">View</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function searchServices() {
-            const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
-            if (searchTerm === '') return;
-
-            const popularServices = document.getElementById('popularServices');
-            popularServices.innerHTML = '<div class="col-12 text-center py-4"><div class="spinner-border text-secondary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
-
-            db.collection('services')
-                .where('name', '>=', searchTerm)
-                .where('name', '<=', searchTerm + '\uf8ff')
-                .get()
-                .then(querySnapshot => {
-                    popularServices.innerHTML = '';
-                    
-                    if (querySnapshot.empty) {
-                        popularServices.innerHTML = '<div class="col-12 text-center py-4"><h5>No services found</h5></div>';
-                        return;
-                    }
-                    
-                    querySnapshot.forEach(doc => {
-                        const service = doc.data();
-                        popularServices.innerHTML += createServiceCard(service, doc.id);
-                    });
-                })
-                .catch(error => {
-                    console.error("Error searching services: ", error);
-                    popularServices.innerHTML = '<div class="col-12 text-center py-4"><h5>Error searching services</h5></div>';
-                });
-        }
-
-        function filterServicesByCategory(category) {
-            if (category === 'All Services') {
-                loadPopularServices();
-                return;
-            }
-
-            const popularServices = document.getElementById('popularServices');
-            popularServices.innerHTML = '<div class="col-12 text-center py-4"><div class="spinner-border text-secondary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
-
-            db.collection('services')
-                .where('category', '==', category)
-                .get()
-                .then(querySnapshot => {
-                    popularServices.innerHTML = '';
-                    
-                    if (querySnapshot.empty) {
-                        popularServices.innerHTML = '<div class="col-12 text-center py-4"><h5>No services in this category</h5></div>';
-                        return;
-                    }
-                    
-                    querySnapshot.forEach(doc => {
-                        const service = doc.data();
-                        popularServices.innerHTML += createServiceCard(service, doc.id);
-                    });
-                })
-                .catch(error => {
-                    console.error("Error filtering services: ", error);
-                    popularServices.innerHTML = '<div class="col-12 text-center py-4"><h5>Error filtering services</h5></div>';
-                });
-        }
-
-        function filterByLocation(location) {
-            const nearbySalons = document.getElementById('nearbySalons');
-            nearbySalons.innerHTML = '<div class="col-12 text-center py-4"><div class="spinner-border text-secondary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
-
-            db.collection('salons')
-                .where('address', 'array-contains', location)
-                .get()
-                .then(querySnapshot => {
-                    nearbySalons.innerHTML = '';
-                    
-                    if (querySnapshot.empty) {
-                        nearbySalons.innerHTML = '<div class="col-12 text-center py-4"><h5>No salons in this location</h5></div>';
-                        return;
-                    }
-                    
-                    querySnapshot.forEach(doc => {
-                        const salon = doc.data();
-                        nearbySalons.innerHTML += createSalonCard(salon, doc.id);
-                    });
-                })
-                .catch(error => {
-                    console.error("Error filtering salons: ", error);
-                    nearbySalons.innerHTML = '<div class="col-12 text-center py-4"><h5>Error filtering salons</h5></div>';
-                });
-        }
-    </script>
+        
+<script src="main.js" defer></script>
 </body>
-</html>
+    </html>
