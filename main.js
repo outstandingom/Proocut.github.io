@@ -1025,3 +1025,117 @@ function getUrlParameter(name) {
     return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
 } 
 //inedex.html logic end
+// addservices 
+// Add Service Page Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if we're on the add service page
+    if (document.getElementById('addServiceForm')) {
+        // Initialize Firebase services if not already available
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        // Service image preview
+        document.getElementById('serviceImageUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const preview = document.getElementById('serviceImagePreview');
+                    preview.src = event.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Add service form submission
+        document.getElementById('addServiceForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Get current merchant/user
+            const user = auth.currentUser;
+            if (!user) {
+                alert('Please login first');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Get form values
+            const serviceName = document.getElementById('serviceName').value.trim();
+            const serviceCategory = document.getElementById('serviceCategory').value;
+            const serviceDescription = document.getElementById('serviceDescription').value.trim();
+            const servicePrice = parseFloat(document.getElementById('servicePrice').value);
+            const serviceDuration = parseInt(document.getElementById('serviceDuration').value);
+            const imageFile = document.getElementById('serviceImageUpload').files[0];
+
+            // Validate form
+            if (!serviceName) {
+                alert('Please enter a service name');
+                return;
+            }
+            if (!serviceCategory) {
+                alert('Please select a category');
+                return;
+            }
+            if (isNaN(servicePrice) || servicePrice <= 0) {
+                alert('Please enter a valid price');
+                return;
+            }
+            if (isNaN(serviceDuration) || serviceDuration < 15) {
+                alert('Duration must be at least 15 minutes');
+                return;
+            }
+
+            // Show loading state
+            const submitBtn = document.getElementById('saveServiceBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+
+            try {
+                let imageUrl = '';
+                
+                // Upload image if exists
+                if (imageFile) {
+                    const storageRef = storage.ref(`services/${user.uid}/${Date.now()}_${imageFile.name}`);
+                    const snapshot = await storageRef.put(imageFile);
+                    imageUrl = await snapshot.ref.getDownloadURL();
+                }
+
+                // Save service data to Firestore
+                await db.collection('services').add({
+                    merchantId: user.uid,
+                    name: serviceName,
+                    category: serviceCategory,
+                    description: serviceDescription,
+                    price: servicePrice,
+                    duration: serviceDuration,
+                    imageUrl: imageUrl,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                alert('Service added successfully!');
+                window.location.href = 'merchantservices.html';
+                
+            } catch (error) {
+                console.error('Error adding service:', error);
+                alert('Failed to add service. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Save Service';
+            }
+        });
+
+        // Back button functionality
+        const backButton = document.querySelector('.fa-arrow-left');
+        if (backButton) {
+            backButton.addEventListener('click', function() {
+                history.back();
+            });
+        }
+    }
+});
+// add services end 
