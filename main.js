@@ -1,6 +1,285 @@
 //register
 // Initialize Firebase
 const firebaseConfig = {
+  apiKey: "AIzaSyCsJR-aYy0VGSPvb7pXHaK3EmGsJWcvdDo",
+  authDomain: "login-fa2eb.firebaseapp.com",
+  projectId: "login-fa2eb",
+  storageBucket: "login-fa2eb.appspot.com",
+  messagingSenderId: "1093052500996",
+  appId: "1:1093052500996:web:05a13485172c455e93b951",
+  measurementId: "G-9TC2J0YQ3R"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+
+// Initialize Firebase services
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// DOM elements
+const registerForm = document.getElementById('registerForm');
+const fullNameInput = document.getElementById('fullName');
+const emailInput = document.getElementById('registerEmail');
+const passwordInput = document.getElementById('registerPassword');
+const confirmPasswordInput = document.getElementById('confirmPassword');
+const termsCheckbox = document.getElementById('termsAgree');
+const registerButton = document.getElementById('registerButton');
+const passwordStrengthBar = document.getElementById('passwordStrengthBar');
+const passwordStrengthText = document.getElementById('passwordStrengthText');
+const registerPasswordToggle = document.getElementById('registerPasswordToggle');
+const confirmPasswordToggle = document.getElementById('confirmPasswordToggle');
+const successMessage = document.getElementById('successMessage');
+
+// Error message elements
+const nameError = document.getElementById('nameError');
+const emailError = document.getElementById('emailError');
+const passwordError = document.getElementById('passwordError');
+const confirmPasswordError = document.getElementById('confirmPasswordError');
+const termsError = document.getElementById('termsError');
+
+// Password toggle functionality
+registerPasswordToggle.addEventListener('click', () => {
+  togglePasswordVisibility(passwordInput, registerPasswordToggle);
+});
+
+confirmPasswordToggle.addEventListener('click', () => {
+  togglePasswordVisibility(confirmPasswordInput, confirmPasswordToggle);
+});
+
+function togglePasswordVisibility(inputElement, toggleElement) {
+  const type = inputElement.getAttribute('type') === 'password' ? 'text' : 'password';
+  inputElement.setAttribute('type', type);
+  toggleElement.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+}
+
+// Password strength checker
+passwordInput.addEventListener('input', () => {
+  checkPasswordStrength(passwordInput.value);
+});
+
+function checkPasswordStrength(password) {
+  // Reset strength indicator
+  let strength = 0;
+  let color = '';
+  let text = '';
+  
+  // Check password length
+  if (password.length >= 8) strength += 1;
+  
+  // Check for uppercase letters
+  if (/[A-Z]/.test(password)) strength += 1;
+  
+  // Check for numbers
+  if (/[0-9]/.test(password)) strength += 1;
+  
+  // Check for special characters
+  if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+  
+  // Determine strength level
+  switch(strength) {
+    case 0:
+    case 1:
+      color = '#d32f2f';
+      text = 'Weak';
+      break;
+    case 2:
+      color = '#ff9800';
+      text = 'Medium';
+      break;
+    case 3:
+      color = '#4caf50';
+      text = 'Strong';
+      break;
+    case 4:
+      color = '#2e7d32';
+      text = 'Very Strong';
+      break;
+    default:
+      color = '#d32f2f';
+      text = 'Weak';
+  }
+  
+  // Update UI
+  passwordStrengthBar.style.width = `${strength * 25}%`;
+  passwordStrengthBar.style.backgroundColor = color;
+  passwordStrengthText.textContent = text;
+  passwordStrengthText.className = `password-strength-text ${text.toLowerCase().replace(' ', '-')}`;
+}
+
+// Form validation
+function validateForm() {
+  let isValid = true;
+  
+  // Reset error messages
+  nameError.style.display = 'none';
+  emailError.style.display = 'none';
+  passwordError.style.display = 'none';
+  confirmPasswordError.style.display = 'none';
+  termsError.style.display = 'none';
+  
+  // Validate full name
+  if (fullNameInput.value.trim() === '') {
+    nameError.textContent = 'Full name is required';
+    nameError.style.display = 'block';
+    isValid = false;
+  } else if (fullNameInput.value.trim().length < 3) {
+    nameError.textContent = 'Name must be at least 3 characters';
+    nameError.style.display = 'block';
+    isValid = false;
+  }
+  
+  // Validate email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (emailInput.value.trim() === '') {
+    emailError.textContent = 'Email is required';
+    emailError.style.display = 'block';
+    isValid = false;
+  } else if (!emailRegex.test(emailInput.value)) {
+    emailError.textContent = 'Please enter a valid email address';
+    emailError.style.display = 'block';
+    isValid = false;
+  }
+  
+  // Validate password
+  if (passwordInput.value === '') {
+    passwordError.textContent = 'Password is required';
+    passwordError.style.display = 'block';
+    isValid = false;
+  } else if (passwordInput.value.length < 8) {
+    passwordError.textContent = 'Password must be at least 8 characters';
+    passwordError.style.display = 'block';
+    isValid = false;
+  } else if (!/[A-Z]/.test(passwordInput.value)) {
+    passwordError.textContent = 'Password must contain at least one uppercase letter';
+    passwordError.style.display = 'block';
+    isValid = false;
+  } else if (!/[0-9]/.test(passwordInput.value)) {
+    passwordError.textContent = 'Password must contain at least one number';
+    passwordError.style.display = 'block';
+    isValid = false;
+  } else if (!/[^A-Za-z0-9]/.test(passwordInput.value)) {
+    passwordError.textContent = 'Password must contain at least one special character';
+    passwordError.style.display = 'block';
+    isValid = false;
+  }
+  
+  // Validate confirm password
+  if (confirmPasswordInput.value === '') {
+    confirmPasswordError.textContent = 'Please confirm your password';
+    confirmPasswordError.style.display = 'block';
+    isValid = false;
+  } else if (passwordInput.value !== confirmPasswordInput.value) {
+    confirmPasswordError.textContent = 'Passwords do not match';
+    confirmPasswordError.style.display = 'block';
+    isValid = false;
+  }
+  
+  // Validate terms agreement
+  if (!termsCheckbox.checked) {
+    termsError.textContent = 'You must agree to the terms and conditions';
+    termsError.style.display = 'block';
+    isValid = false;
+  }
+  
+  return isValid;
+}
+
+// Form submission
+registerForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  // Validate form
+  if (!validateForm()) return;
+  
+  // Disable button to prevent multiple submissions
+  registerButton.disabled = true;
+  registerButton.textContent = 'Creating account...';
+  
+  const email = emailInput.value;
+  const password = passwordInput.value;
+  const fullName = fullNameInput.value;
+  
+  try {
+    // Create user with email and password
+    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+    const user = userCredential.user;
+    
+    // Save additional user data to Firestore
+    await db.collection('users').doc(user.uid).set({
+      fullName: fullName,
+      email: email,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    
+    // Show success message
+    successMessage.textContent = 'Account created successfully! Redirecting...';
+    successMessage.style.display = 'block';
+    
+    // Redirect to dashboard or another page after 2 seconds
+    setTimeout(() => {
+      window.location.href = 'dashboard.html'; // Change to your desired redirect page
+    }, 2000);
+    
+  } catch (error) {
+    // Handle errors
+    registerButton.disabled = false;
+    registerButton.textContent = 'Create Account';
+    
+    let errorMessage = 'An error occurred. Please try again.';
+    
+    switch(error.code) {
+      case 'auth/email-already-in-use':
+        errorMessage = 'This email is already in use by another account.';
+        emailError.textContent = errorMessage;
+        emailError.style.display = 'block';
+        break;
+      case 'auth/invalid-email':
+        errorMessage = 'The email address is not valid.';
+        emailError.textContent = errorMessage;
+        emailError.style.display = 'block';
+        break;
+      case 'auth/weak-password':
+        errorMessage = 'The password is too weak.';
+        passwordError.textContent = errorMessage;
+        passwordError.style.display = 'block';
+        break;
+      case 'auth/network-request-failed':
+        errorMessage = 'A network error occurred. Please check your connection.';
+        break;
+      default:
+        errorMessage = error.message || 'An unknown error occurred.';
+    }
+    
+    if (!emailError.style.display === 'block') {
+      // If the error isn't email-related, show a generic error
+      const errorElement = document.createElement('div');
+      errorElement.className = 'error-message';
+      errorElement.textContent = errorMessage;
+      errorElement.style.display = 'block';
+      registerForm.insertBefore(errorElement, registerForm.firstChild);
+      
+      // Remove the error after 5 seconds
+      setTimeout(() => {
+        errorElement.remove();
+      }, 5000);
+    }
+  }
+});
+
+// Social login handlers (optional)
+document.getElementById('googleSignIn').addEventListener('click', () => {
+  // Implement Google sign-in if needed
+  console.log('Google sign-in clicked');
+});
+
+document.getElementById('facebookSignIn').addEventListener('click', () => {
+  // Implement Facebook sign-in if needed
+  console.log('Facebook sign-in clicked');
+});
+// Initialize Firebase
+const firebaseConfig = {
     apiKey: "AIzaSyCsJR-aYy0VGSPvb7pXHaK3EmGsJWcvdDo",
     authDomain: "login-fa2eb.firebaseapp.com",
     projectId: "login-fa2eb",
@@ -205,8 +484,7 @@ registerForm.addEventListener('submit', async (e) => {
         let errorMessage = 'An error occurred during registration. Please try again.';
         
         if (error.code === 'auth/email-already-in-use') {
-            errorMessage = 'This email is already registered. Please use a different email or login.';
-        } else if (error.code === 'auth/weak-password') {
+            errorMessage = 'This email is already registered. Please use a different email or login.';        } else if (error.code === 'auth/weak-password') {
             errorMessage = 'Password is too weak. Please choose a stronger password.';
         } else if (error.code === 'auth/invalid-email') {
             errorMessage = 'Please enter a valid email address.';
@@ -231,75 +509,7 @@ document.getElementById('googleSignIn').addEventListener('click', async () => {
         
         // Check if user is new or existing
         if (result.additionalUserInfo.isNewUser) {
-            // Save user data to Firestore for new users
-            await db.collection('users').doc(user.uid).set({
-                fullName: user.displayName || 'Google User',
-                email: user.email,
-                photoURL: user.photoURL || '',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
-                role: 'customer'
-            });
-        } else {
-            // Update last login for existing users
-            await db.collection('users').doc(user.uid).update({
-                lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        }
-        
-        // Redirect to dashboard or appropriate page
-        window.location.href = 'userprofile.html';
-        
-    } catch (error) {
-        console.error('Google sign-in error:', error);
-        alert('Google sign-in failed. Please try again.');
-    }
-});
 
-// Facebook Sign-In
-document.getElementById('facebookSignIn').addEventListener('click', async () => {
-    try {
-        const provider = new firebase.auth.FacebookAuthProvider();
-        const result = await auth.signInWithPopup(provider);
-        const user = result.user;
-        
-        // Check if user is new or existing
-        if (result.additionalUserInfo.isNewUser) {
-            // Save user data to Firestore for new users
-            await db.collection('users').doc(user.uid).set({
-                fullName: user.displayName || 'Facebook User',
-                email: user.email,
-                photoURL: user.photoURL || '',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
-                role: 'customer'
-            });
-        } else {
-            // Update last login for existing users
-            await db.collection('users').doc(user.uid).update({
-                lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        }
-        
-        // Redirect to dashboard or appropriate page
-        window.location.href = 'userprofile.html';
-        
-    } catch (error) {
-        console.error('Facebook sign-in error:', error);
-        alert('Facebook sign-in failed. Please try again.');
-    }
-});
-
-// Auth state observer (optional)
-auth.onAuthStateChanged(user => {
-    if (user) {
-        console.log('User is logged in:', user.email);
-        // You might want to redirect if user is already logged in
-        // window.location.href = 'userprofile.html';
-    } else {
-        console.log('User is logged out');
-    }
-});
   //register finish
 //login logic
 // Login functionality
