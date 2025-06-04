@@ -2520,3 +2520,370 @@ function checkAuthState() {
 // Initialize auth check
 checkAuthState();
 // merchnat service 
+
+// merchant booking 
+// DOM Elements
+const merchantBookingsContainer = document.getElementById('merchantBookingsContainer');
+const todayTab = document.querySelector('.merchant-tab:nth-child(1)');
+const upcomingTab = document.querySelector('.merchant-tab:nth-child(2)');
+const completedTab = document.querySelector('.merchant-tab:nth-child(3)');
+const allTab = document.querySelector('.merchant-tab:nth-child(4)');
+
+// Global variables
+let currentMerchant = null;
+let allBookings = [];
+let currentTab = 'today';
+
+// Initialize the page
+document.addEventListener('DOMContentLoaded', function() {
+    // Check authentication
+    firebase.auth().onAuthStateChanged(function(user) {
+        if (user) {
+            currentMerchant = user;
+            checkMerchantProfile(user.uid);
+        } else {
+            // Redirect to login if not authenticated
+            window.location.href = 'login.html';
+        }
+    });
+
+    // Set up tab event listeners
+    setupTabs();
+});
+
+// Verify merchant profile exists
+function checkMerchantProfile(uid) {
+    db.collection('merchants').doc(uid).get()
+        .then(doc => {
+            if (doc.exists) {
+                loadMerchantBookings();
+            } else {
+                // Redirect to merchant profile setup if not registered as merchant
+                window.location.href = 'merchantregister.html';
+            }
+        })
+        .catch(error => {
+            console.error('Error checking merchant profile:', error);
+            showError('Error loading merchant data. Please try again.');
+        });
+}
+
+// Load merchant bookings from Firestore
+function loadMerchantBookings() {
+    showLoadingState();
+    
+    db.collection('bookings')
+        .where('merchantId', '==', currentMerchant.uid)
+        .orderBy('dateTime', 'desc')
+        .get()
+        .then(querySnapshot => {
+            allBookings = [];
+            querySnapshot.forEach(doc => {
+                const booking = {
+                    id: doc.id,
+                    ...doc.data(),
+                    // Convert Firestore timestamp to Date object
+                    dateTime: doc.data().dateTime.toDate(),
+                    createdAt: doc.data().createdAt.toDate()
+                };
+                allBookings.push(booking);
+            });
+            
+            renderBookings(currentTab);
+        })
+        .catch(error => {
+            console.error('Error loading bookings:', error);
+            showError('Failed to load bookings. Please try again.');
+            renderEmptyState();
+        });
+}
+
+// Set up tab switching functionality
+function setupTabs() {
+    todayTab.addEventListener('click', () => switchTab('today'));
+    upcomingTab.addEventListener('click', () => switchTab('upcoming'));
+    completedTab.addEventListener('click', () => switchTab('completed'));
+    allTab.addEventListener('click', () => switchTab('all'));
+}
+
+// Switch between booking tabs
+function switchTab(tab) {
+    currentTab = tab;
+    
+    // Update active tab UI
+    document.querySelectorAll('.merchant-tab').forEach(t => t.classList.remove('active'));
+    switch(tab) {
+        case 'today':
+            todayTab.classList.add('active');
+            break;
+        case 'upcoming':
+            upcomingTab.classList.add('active');
+            break;
+        case 'completed':
+            completedTab.classList.add('active');
+            break;
+        case 'all':
+            allTab.classList.add('active');
+            break;
+    }
+    
+    renderBookings(tab);
+}
+
+// Render bookings based on current tab
+function renderBookings(tab) {
+    // Filter bookings based on tab
+    let filteredBookings = [];
+    const now = new Date();
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(now);
+    todayEnd.setHours(23, 59, 59, 999);
+    
+    switch(tab) {
+        case 'today':
+            filteredBookings = allBookings.filter(booking => 
+                booking.dateTime >= todayStart && 
+                booking.dateTime <= todayEnd &&
+                booking.status !== 'cancelled'
+            );
+            break;
+        case 'upcoming':
+            filteredBookings = allBookings.filter(booking => 
+                booking.dateTime > now && 
+                booking.status !== 'cancelled'
+            );
+            break;
+        case 'completed':
+            filteredBookings = allBookings.filter(booking => 
+                (booking.status === 'completed' || 
+                 (booking.status === 'confirmed' && booking.dateTime <= now))
+            );
+            break;
+        case 'all':
+            filteredBookings = allBookings;
+            break;
+    }
+    
+    // Clear current bookings
+    merchantBookingsContainer.innerHTML = '';
+    
+    if (filteredBookings.length === 0) {
+        renderEmptyState(tab);
+        return;
+    }
+    
+    // Render each booking
+    filteredBookings.forEach(booking => {
+        const bookingElement = createBookingElement(booking);
+        merchantBookingsContainer.appendChild(bookingElement);
+    });
+    
+    // Add event listeners to booking buttons
+    addBookingButtonListeners();
+}
+
+// Create HTML element for a booking
+function createBookingElement(booking) {
+    const bookingDate = booking.dateTime.toLocaleDateString('en-US', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+    
+    const bookingTime = booking.dateTime.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    const createdDate = booking.createdAt.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+    
+    // Determine status class and text
+    let statusClass, statusText;
+    const now = new Date();
+    
+    if (booking.status === 'cancelled') {
+        statusClass = 'status-cancelled';
+        statusText = 'Cancelled';
+    } else if (booking.status === 'completed') {
+        statusClass = 'status-completed';
+        statusText = 'Completed';
+    } else if (booking.dateTime <= now) {
+        statusClass = 'status-completed';
+        statusText = 'Completed';
+    } else {
+        statusClass = 'status-confirmed';
+        statusText = 'Confirmed';
+    }
+    
+    // Create booking card HTML
+    const bookingElement = document.createElement('div');
+    bookingElement.className = 'booking-card';
+    bookingElement.dataset.bookingId = booking.id;
+    
+    bookingElement.innerHTML = `
+        <div class="booking-card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="booking-status ${statusClass}">${statusText}</span>
+                <span class="text-muted ms-2">Booking ID: #${booking.id.substring(0, 6).toUpperCase()}</span>
+            </div>
+            <div class="text-muted">Booked on: ${createdDate}</div>
+        </div>
+        <div class="booking-card-body">
+            <div class="row">
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <img src="${booking.serviceImage || 'https://via.placeholder.com/300x200'}" alt="Service" class="booking-image">
+                </div>
+                <div class="col-md-5">
+                    <h5>${booking.serviceName}</h5>
+                    <div class="booking-detail">
+                        <div class="booking-detail-label">Customer</div>
+                        <div class="booking-detail-value">${booking.userName || 'Customer'}</div>
+                    </div>
+                    <div class="booking-detail">
+                        <div class="booking-detail-label">Date & Time</div>
+                        <div class="booking-detail-value">${bookingDate}, ${bookingTime}</div>
+                    </div>
+                    <div class="booking-detail">
+                        <div class="booking-detail-label">Professional</div>
+                        <div class="booking-detail-value">${booking.professionalName || 'Assigned Professional'}</div>
+                    </div>
+                </div>
+                <div class="col-md-3 d-flex flex-column justify-content-between">
+                    <div class="text-end mb-3">
+                        <div class="booking-detail-label">Total Amount</div>
+                        <div class="h4">₹${booking.servicePrice || '0'}</div>
+                    </div>
+                    <div class="d-flex flex-column gap-2">
+                        <button class="btn btn-dark view-details-btn">View Details</button>
+                        ${booking.status === 'confirmed' && booking.dateTime > now ? 
+                            `<button class="btn btn-outline-dark complete-booking-btn">Mark Complete</button>` : 
+                            ''
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    return bookingElement;
+}
+
+// Add event listeners to booking buttons
+function addBookingButtonListeners() {
+    // View Details buttons
+    document.querySelectorAll('.view-details-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const bookingId = this.closest('.booking-card').dataset.bookingId;
+            viewBookingDetails(bookingId);
+        });
+    });
+    
+    // Complete Booking buttons
+    document.querySelectorAll('.complete-booking-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const bookingId = this.closest('.booking-card').dataset.bookingId;
+            completeBooking(bookingId);
+        });
+    });
+}
+
+// View booking details
+function viewBookingDetails(bookingId) {
+    const booking = allBookings.find(b => b.id === bookingId);
+    if (booking) {
+        // In a real app, you might show a modal with more details
+        const notes = booking.notes ? `\n\nNotes: ${booking.notes}` : '';
+        alert(`Booking Details:\n\nService: ${booking.serviceName}\nCustomer: ${booking.userName}\nDate: ${booking.dateTime.toLocaleString()}\nStatus: ${booking.status}${notes}`);
+    }
+}
+
+// Mark booking as complete
+function completeBooking(bookingId) {
+    if (confirm('Mark this booking as complete?')) {
+        showLoadingState();
+        
+        db.collection('bookings').doc(bookingId).update({
+            status: 'completed',
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        })
+        .then(() => {
+            showSuccess('Booking marked as complete');
+            loadMerchantBookings(); // Refresh the list
+        })
+        .catch(error => {
+            console.error('Error completing booking:', error);
+            showError('Failed to update booking. Please try again.');
+        });
+    }
+}
+
+// Show empty state
+function renderEmptyState(tab) {
+    let message = '';
+    switch(tab) {
+        case 'today':
+            message = 'No bookings scheduled for today';
+            break;
+        case 'upcoming':
+            message = 'No upcoming bookings';
+            break;
+        case 'completed':
+            message = 'No completed bookings yet';
+            break;
+        case 'all':
+            message = 'No bookings found';
+            break;
+    }
+    
+    merchantBookingsContainer.innerHTML = `
+        <div class="empty-state text-center py-5">
+            <i class="far fa-calendar-alt" style="font-size: 50px; color: #777;"></i>
+            <h4 class="mt-3">${message}</h4>
+        </div>
+    `;
+}
+
+// Show loading state
+function showLoadingState() {
+    merchantBookingsContainer.innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-secondary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Loading bookings...</p>
+        </div>
+    `;
+}
+
+// Show success message
+function showSuccess(message) {
+    // In a real app, you might use a toast notification
+    const toast = document.createElement('div');
+    toast.className = 'alert alert-success position-fixed top-0 start-50 translate-middle-x mt-3';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+
+// Show error message
+function showError(message) {
+    // In a real app, you might use a toast notification
+    const toast = document.createElement('div');
+    toast.className = 'alert alert-danger position-fixed top-0 start-50 translate-middle-x mt-3';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+// merchant bookings end 
