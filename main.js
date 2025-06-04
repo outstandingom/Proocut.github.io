@@ -1421,3 +1421,181 @@ function showSuccess(message) {
     alert(message);
 } 
 // bookservices end 
+//merchant rtegister 
+// Merchant Registration Page Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if we're on the merchant registration page
+    if (document.getElementById('merchantRegistrationForm')) {
+        // Initialize Firebase services if not already available
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        // Salon image preview
+        document.getElementById('salonImageUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const preview = document.getElementById('salonImagePreview');
+                    preview.src = event.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Add service button functionality
+        document.getElementById('addServiceBtn').addEventListener('click', function() {
+            const serviceId = 'service-' + Date.now();
+            const serviceItem = document.createElement('div');
+            serviceItem.className = 'service-item';
+            serviceItem.id = serviceId;
+            serviceItem.innerHTML = `
+                <div class="service-details">
+                    <input type="text" class="form-control mb-2 service-name" placeholder="Service name" required>
+                    <div class="row">
+                        <div class="col-6">
+                            <input type="number" class="form-control service-price" placeholder="Price (₹)" min="0" required>
+                        </div>
+                        <div class="col-6">
+                            <input type="number" class="form-control service-duration" placeholder="Duration (mins)" min="15" required>
+                        </div>
+                    </div>
+                </div>
+                <i class="fas fa-times remove-service" data-service-id="${serviceId}"></i>
+            `;
+            
+            document.getElementById('servicesList').appendChild(serviceItem);
+            
+            // Add event listener to remove button
+            serviceItem.querySelector('.remove-service').addEventListener('click', function() {
+                document.getElementById(this.getAttribute('data-service-id')).remove();
+            });
+        });
+
+        // Merchant registration form submission
+        document.getElementById('merchantRegistrationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Get current user
+            const user = auth.currentUser;
+            if (!user) {
+                alert('Please login first');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Validate terms agreement
+            if (!document.getElementById('termsAgree').checked) {
+                alert('Please agree to the Terms & Conditions');
+                return;
+            }
+
+            // Validate at least one service
+            const services = document.getElementById('servicesList').children;
+            if (services.length === 0) {
+                alert('Please add at least one service');
+                return;
+            }
+
+            // Show loading state
+            const submitBtn = document.getElementById('registerMerchantBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Registering...';
+
+            try {
+                // Collect salon data
+                const salonData = {
+                    ownerId: user.uid,
+                    name: document.getElementById('salonName').value.trim(),
+                    description: document.getElementById('salonDescription').value.trim(),
+                    address: document.getElementById('salonAddress').value.trim(),
+                    city: document.getElementById('salonCity').value.trim(),
+                    location: document.getElementById('salonLocation').value,
+                    contact: {
+                        name: document.getElementById('contactName').value.trim(),
+                        phone: document.getElementById('contactPhone').value.trim(),
+                        email: document.getElementById('contactEmail').value.trim()
+                    },
+                    hours: {
+                        opening: document.getElementById('openingTime').value,
+                        closing: document.getElementById('closingTime').value,
+                        closedOnSunday: document.getElementById('sundayClosed').checked
+                    },
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                // Upload salon image if exists
+                const imageFile = document.getElementById('salonImageUpload').files[0];
+                if (imageFile) {
+                    const storageRef = storage.ref(`salons/${user.uid}/${Date.now()}_${imageFile.name}`);
+                    const snapshot = await storageRef.put(imageFile);
+                    salonData.imageUrl = await snapshot.ref.getDownloadURL();
+                }
+
+                // Process services
+                const servicesData = [];
+                for (let service of services) {
+                    const name = service.querySelector('.service-name').value.trim();
+                    const price = parseFloat(service.querySelector('.service-price').value);
+                    const duration = parseInt(service.querySelector('.service-duration').value);
+
+                    if (!name || isNaN(price) || isNaN(duration)) {
+                        throw new Error('Please fill all service fields correctly');
+                    }
+
+                    servicesData.push({
+                        name,
+                        price,
+                        duration
+                    });
+                }
+
+                // Save salon data to Firestore
+                const salonRef = await db.collection('salons').add(salonData);
+                
+                // Save services to Firestore
+                const batch = db.batch();
+                servicesData.forEach(service => {
+                    const serviceRef = db.collection('services').doc();
+                    batch.set(serviceRef, {
+                        ...service,
+                        salonId: salonRef.id,
+                        ownerId: user.uid,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                });
+                await batch.commit();
+
+                // Update user role to merchant
+                await db.collection('users').doc(user.uid).update({
+                    role: 'merchant',
+                    merchantId: salonRef.id
+                });
+
+                alert('Merchant registration successful! Redirecting to dashboard...');
+                window.location.href = 'merchantdashboard.html';
+                
+            } catch (error) {
+                console.error('Registration error:', error);
+                alert(error.message || 'Failed to register. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Register as Merchant';
+            }
+        });
+
+        // Back button functionality
+        const backButton = document.querySelector('.fa-arrow-left');
+        if (backButton) {
+            backButton.addEventListener('click', function() {
+                history.back();
+            });
+        }
+    }
+});
+ //merchant register end
