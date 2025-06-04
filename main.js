@@ -1928,3 +1928,147 @@ function showError(message) {
     
 }
 // end user bookings
+// reset password
+// DOM Elements
+const newPasswordForm = document.getElementById('newPasswordForm');
+const newPasswordInput = document.getElementById('newPassword');
+const confirmPasswordInput = document.getElementById('confirmPassword');
+const passwordError = document.getElementById('passwordError');
+const confirmError = document.getElementById('confirmError');
+const successMessage = document.getElementById('successMessage');
+const resetButton = document.getElementById('resetButton');
+const newPasswordToggle = document.getElementById('newPasswordToggle');
+const confirmPasswordToggle = document.getElementById('confirmPasswordToggle');
+
+// Firebase Auth instance
+const auth = firebase.auth();
+
+// Function to handle password reset
+async function handlePasswordReset(newPassword) {
+    try {
+        // Get the password reset code from the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const oobCode = urlParams.get('oobCode');
+        
+        if (!oobCode) {
+            throw new Error('Invalid password reset link. Please request a new one.');
+        }
+        
+        // Confirm the password reset with Firebase
+        await auth.confirmPasswordReset(oobCode, newPassword);
+        
+        // Show success message
+        showSuccess('Password reset successfully! Redirecting to login...');
+        
+        // Redirect to login page after 2 seconds
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 2000);
+        
+    } catch (error) {
+        // Handle specific Firebase errors
+        let errorMessage = 'Error resetting password. Please try again.';
+        
+        switch (error.code) {
+            case 'auth/expired-action-code':
+                errorMessage = 'The password reset link has expired. Please request a new one.';
+                break;
+            case 'auth/invalid-action-code':
+                errorMessage = 'The password reset link is invalid. Please request a new one.';
+                break;
+            case 'auth/user-disabled':
+                errorMessage = 'This account has been disabled.';
+                break;
+            case 'auth/user-not-found':
+                errorMessage = 'No account found with this email.';
+                break;
+            case 'auth/weak-password':
+                errorMessage = 'Password should be at least 6 characters.';
+                break;
+        }
+        
+        showError(confirmError, errorMessage);
+        resetButton.disabled = false;
+        resetButton.textContent = 'Reset Password';
+    }
+}
+
+// Show error message
+function showError(element, message) {
+    element.textContent = message;
+    element.style.display = 'block';
+    successMessage.style.display = 'none';
+}
+
+// Show success message
+function showSuccess(message) {
+    successMessage.textContent = message;
+    successMessage.style.display = 'block';
+    passwordError.style.display = 'none';
+    confirmError.style.display = 'none';
+}
+
+// Toggle password visibility
+function togglePasswordVisibility(inputElement, toggleElement) {
+    if (inputElement.type === 'password') {
+        inputElement.type = 'text';
+        toggleElement.innerHTML = '<i class="fas fa-eye-slash"></i>';
+    } else {
+        inputElement.type = 'password';
+        toggleElement.innerHTML = '<i class="fas fa-eye"></i>';
+    }
+}
+
+// Form submission handler
+newPasswordForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const newPassword = newPasswordInput.value;
+    const confirmPassword = confirmPasswordInput.value;
+    
+    // Reset error messages
+    passwordError.style.display = 'none';
+    confirmError.style.display = 'none';
+    
+    // Validate password
+    if (newPassword.length < 6) {
+        showError(passwordError, 'Password must be at least 6 characters');
+        return;
+    }
+    
+    // Check if passwords match
+    if (newPassword !== confirmPassword) {
+        showError(confirmError, 'Passwords do not match');
+        return;
+    }
+    
+    // Show loading state
+    resetButton.disabled = true;
+    resetButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Resetting...';
+    
+    // Handle password reset
+    await handlePasswordReset(newPassword);
+});
+
+// Password toggle event listeners
+newPasswordToggle.addEventListener('click', () => {
+    togglePasswordVisibility(newPasswordInput, newPasswordToggle);
+});
+
+confirmPasswordToggle.addEventListener('click', () => {
+    togglePasswordVisibility(confirmPasswordInput, confirmPasswordToggle);
+});
+
+// Check if the page is loaded with a valid reset code
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const oobCode = urlParams.get('oobCode');
+    
+    if (!oobCode) {
+        showError(confirmError, 'Invalid password reset link. Please request a new one.');
+        newPasswordInput.disabled = true;
+        confirmPasswordInput.disabled = true;
+        resetButton.disabled = true;
+    }
+});
+//  reset password end 
