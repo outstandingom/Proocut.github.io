@@ -516,3 +516,144 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 // login finish
+
+//user profile // User Profile Management
+document.addEventListener('DOMContentLoaded', function() {
+    // Check authentication state
+    firebase.auth().onAuthStateChanged((user) => {
+        if (!user) {
+            // If no user is logged in, redirect to login page
+            window.location.href = 'login.html';
+        }
+    });
+
+    // Tab switching functionality
+    const setupProfileTabs = () => {
+        const profileTab = document.getElementById('profileTab');
+        const settingsTab = document.getElementById('settingsTab');
+        const tabItems = document.querySelectorAll('.profile-nav-item');
+
+        tabItems.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Update active tab styling
+                tabItems.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Show the corresponding tab content
+                if (this.textContent.trim() === 'Profile') {
+                    profileTab.style.display = 'block';
+                    settingsTab.style.display = 'none';
+                } else if (this.textContent.trim() === 'Settings') {
+                    profileTab.style.display = 'none';
+                    settingsTab.style.display = 'block';
+                }
+            });
+        });
+    };
+
+    // Logout functionality
+    const setupLogout = () => {
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                firebase.auth().signOut().then(() => {
+                    window.location.href = 'login.html';
+                }).catch((error) => {
+                    console.error('Logout error:', error);
+                    alert('Error during logout. Please try again.');
+                });
+            });
+        }
+    };
+
+    // Password reset functionality
+    const setupPasswordReset = () => {
+        const changePasswordBtn = document.getElementById('changePasswordBtn');
+        if (changePasswordBtn) {
+            changePasswordBtn.addEventListener('click', () => {
+                const user = firebase.auth().currentUser;
+                if (user && user.email) {
+                    firebase.auth().sendPasswordResetEmail(user.email)
+                        .then(() => {
+                            alert('Password reset email sent. Please check your inbox.');
+                        })
+                        .catch((error) => {
+                            console.error('Password reset error:', error);
+                            alert('Error sending password reset email. Please try again.');
+                        });
+                } else {
+                    alert('No authenticated user found. Please login again.');
+                }
+            });
+        }
+    };
+
+    // Load user profile data
+    const loadUserProfile = () => {
+        const user = firebase.auth().currentUser;
+        if (user) {
+            const db = firebase.firestore();
+            
+            // Get user data from Firestore
+            db.collection('users').doc(user.uid).get()
+                .then((doc) => {
+                    if (doc.exists) {
+                        const userData = doc.data();
+                        
+                        // Update profile info in the header
+                        document.getElementById('profileName').textContent = userData.fullName || 'User';
+                        document.getElementById('profileEmail').textContent = user.email || '';
+                        
+                        // Update profile details
+                        document.getElementById('profileFullName').textContent = userData.fullName || 'Not provided';
+                        document.getElementById('profileEmailDetail').textContent = user.email || 'Not provided';
+                        
+                        // Format and display join date
+                        if (user.metadata && user.metadata.creationTime) {
+                            const joinDate = new Date(user.metadata.creationTime);
+                            document.getElementById('profileJoinDate').textContent = joinDate.toLocaleDateString();
+                        }
+                        
+                        // Set profile image if available
+                        if (userData.photoURL) {
+                            document.getElementById('profileImage').src = userData.photoURL;
+                        }
+                    } else {
+                        console.log("No user document found in Firestore");
+                        // Fallback to auth data if Firestore doc doesn't exist
+                        document.getElementById('profileName').textContent = user.displayName || 'User';
+                        document.getElementById('profileEmail').textContent = user.email || '';
+                        document.getElementById('profileFullName').textContent = user.displayName || 'Not provided';
+                        document.getElementById('profileEmailDetail').textContent = user.email || 'Not provided';
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error getting user document:", error);
+                    alert('Error loading profile data. Please refresh the page.');
+                });
+        }
+    };
+
+    // Initialize all functionality
+    const initProfilePage = () => {
+        setupProfileTabs();
+        setupLogout();
+        setupPasswordReset();
+        loadUserProfile();
+    };
+
+    // Wait for auth state to be confirmed before initializing
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+            initProfilePage();
+        } else {
+            window.location.href = 'login.html';
+        }
+    });
+});
+
+// Navigation helper function
+function navigateTo(page) {
+    window.location.href = page;
+}  
+//user proifile end
