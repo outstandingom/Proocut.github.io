@@ -1,8 +1,7 @@
-//register
+//gister
 // Initialize Firebase
 
-
-  // Initialize Firebase
+// Initialize Firebase with your config
 const firebaseConfig = {
   apiKey: "AIzaSyCsJR-aYy0VGSPvb7pXHaK3EmGsJWcvdDo",
   authDomain: "login-fa2eb.firebaseapp.com",
@@ -14,11 +13,22 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+try {
+  firebase.initializeApp(firebaseConfig);
+  console.log("Firebase initialized successfully");
+} catch (error) {
+  console.error("Firebase initialization error:", error);
+}
 
-// Initialize Firebase services
+// Get Firebase services
 const auth = firebase.auth();
 const db = firebase.firestore();
+
+// Enable Firestore logging for debugging
+db.enablePersistence()
+  .catch((err) => {
+    console.error("Firestore persistence error:", err);
+  });
 
 // DOM elements
 const registerForm = document.getElementById('registerForm');
@@ -28,11 +38,6 @@ const passwordInput = document.getElementById('registerPassword');
 const confirmPasswordInput = document.getElementById('confirmPassword');
 const termsCheckbox = document.getElementById('termsAgree');
 const registerButton = document.getElementById('registerButton');
-const passwordStrengthBar = document.getElementById('passwordStrengthBar');
-const passwordStrengthText = document.getElementById('passwordStrengthText');
-const registerPasswordToggle = document.getElementById('registerPasswordToggle');
-const confirmPasswordToggle = document.getElementById('confirmPasswordToggle');
-const successMessage = document.getElementById('successMessage');
 
 // Error message elements
 const nameError = document.getElementById('nameError');
@@ -40,155 +45,9 @@ const emailError = document.getElementById('emailError');
 const passwordError = document.getElementById('passwordError');
 const confirmPasswordError = document.getElementById('confirmPasswordError');
 const termsError = document.getElementById('termsError');
+const successMessage = document.getElementById('successMessage');
 
-// Password toggle functionality
-registerPasswordToggle.addEventListener('click', () => {
-  togglePasswordVisibility(passwordInput, registerPasswordToggle);
-});
-
-confirmPasswordToggle.addEventListener('click', () => {
-  togglePasswordVisibility(confirmPasswordInput, confirmPasswordToggle);
-});
-
-function togglePasswordVisibility(inputElement, toggleElement) {
-  const type = inputElement.getAttribute('type') === 'password' ? 'text' : 'password';
-  inputElement.setAttribute('type', type);
-  toggleElement.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
-}
-
-// Password strength checker
-passwordInput.addEventListener('input', () => {
-  checkPasswordStrength(passwordInput.value);
-});
-
-function checkPasswordStrength(password) {
-  // Reset strength indicator
-  let strength = 0;
-  let color = '';
-  let text = '';
-  
-  // Check password length
-  if (password.length >= 8) strength += 1;
-  
-  // Check for uppercase letters
-  if (/[A-Z]/.test(password)) strength += 1;
-  
-  // Check for numbers
-  if (/[0-9]/.test(password)) strength += 1;
-  
-  // Check for special characters
-  if (/[^A-Za-z0-9]/.test(password)) strength += 1;
-  
-  // Determine strength level
-  switch(strength) {
-    case 0:
-    case 1:
-      color = '#d32f2f';
-      text = 'Weak';
-      break;
-    case 2:
-      color = '#ff9800';
-      text = 'Medium';
-      break;
-    case 3:
-      color = '#4caf50';
-      text = 'Strong';
-      break;
-    case 4:
-      color = '#2e7d32';
-      text = 'Very Strong';
-      break;
-    default:
-      color = '#d32f2f';
-      text = 'Weak';
-  }
-  
-  // Update UI
-  passwordStrengthBar.style.width = `${strength * 25}%`;
-  passwordStrengthBar.style.backgroundColor = color;
-  passwordStrengthText.textContent = text;
-  passwordStrengthText.className = `password-strength-text ${text.toLowerCase().replace(' ', '-')}`;
-}
-
-// Form validation
-function validateForm() {
-  let isValid = true;
-  
-  // Reset error messages
-  nameError.style.display = 'none';
-  emailError.style.display = 'none';
-  passwordError.style.display = 'none';
-  confirmPasswordError.style.display = 'none';
-  termsError.style.display = 'none';
-  
-  // Validate full name
-  if (fullNameInput.value.trim() === '') {
-    nameError.textContent = 'Full name is required';
-    nameError.style.display = 'block';
-    isValid = false;
-  } else if (fullNameInput.value.trim().length < 3) {
-    nameError.textContent = 'Name must be at least 3 characters';
-    nameError.style.display = 'block';
-    isValid = false;
-  }
-  
-  // Validate email
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (emailInput.value.trim() === '') {
-    emailError.textContent = 'Email is required';
-    emailError.style.display = 'block';
-    isValid = false;
-  } else if (!emailRegex.test(emailInput.value)) {
-    emailError.textContent = 'Please enter a valid email address';
-    emailError.style.display = 'block';
-    isValid = false;
-  }
-  
-  // Validate password
-  if (passwordInput.value === '') {
-    passwordError.textContent = 'Password is required';
-    passwordError.style.display = 'block';
-    isValid = false;
-  } else if (passwordInput.value.length < 8) {
-    passwordError.textContent = 'Password must be at least 8 characters';
-    passwordError.style.display = 'block';
-    isValid = false;
-  } else if (!/[A-Z]/.test(passwordInput.value)) {
-    passwordError.textContent = 'Password must contain at least one uppercase letter';
-    passwordError.style.display = 'block';
-    isValid = false;
-  } else if (!/[0-9]/.test(passwordInput.value)) {
-    passwordError.textContent = 'Password must contain at least one number';
-    passwordError.style.display = 'block';
-    isValid = false;
-  } else if (!/[^A-Za-z0-9]/.test(passwordInput.value)) {
-    passwordError.textContent = 'Password must contain at least one special character';
-    passwordError.style.display = 'block';
-    isValid = false;
-  }
-  
-  // Validate confirm password
-  if (confirmPasswordInput.value === '') {
-    confirmPasswordError.textContent = 'Please confirm your password';
-    confirmPasswordError.style.display = 'block';
-    isValid = false;
-  } else if (passwordInput.value !== confirmPasswordInput.value) {
-    confirmPasswordError.textContent = 'Passwords do not match';
-    confirmPasswordError.style.display = 'block';
-    isValid = false;
-  }
-  
-  // Validate terms agreement
-  if (!termsCheckbox.checked) {
-    termsError.textContent = 'You must agree to the terms and conditions';
-    termsError.style.display = 'block';
-    isValid = false;
-  }
-  
-  return isValid;
-}
-
-// Form submission
+// Form submission handler
 registerForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   
@@ -199,89 +58,165 @@ registerForm.addEventListener('submit', async (e) => {
   registerButton.disabled = true;
   registerButton.textContent = 'Creating account...';
   
-  const email = emailInput.value;
+  const email = emailInput.value.trim();
   const password = passwordInput.value;
-  const fullName = fullNameInput.value;
+  const fullName = fullNameInput.value.trim();
   
   try {
-    // Create user with email and password
+    console.log("Attempting to create user...");
+    
+    // 1. Create user in Firebase Authentication
     const userCredential = await auth.createUserWithEmailAndPassword(email, password);
     const user = userCredential.user;
+    console.log("User created in Auth:", user.uid);
     
-    // Save additional user data to Firestore
-    await db.collection('users').doc(user.uid).set({
+    // 2. Prepare user data for Firestore
+    const userData = {
       fullName: fullName,
       email: email,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-    });
+      lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+      uid: user.uid // Store UID for easy reference
+    };
     
-    // Show success message
+    console.log("User data to store:", userData);
+    
+    // 3. Save to Firestore
+    await db.collection("users").doc(user.uid).set(userData);
+    console.log("User data saved to Firestore");
+    
+    // 4. Show success message
     successMessage.textContent = 'Account created successfully! Redirecting...';
     successMessage.style.display = 'block';
     
-    // Redirect to dashboard or another page after 2 seconds
+    // 5. Redirect after delay
     setTimeout(() => {
-      window.location.href = 'dashboard.html'; // Change to your desired redirect page
+      window.location.href = 'dashboard.html'; // Change to your desired page
     }, 2000);
     
   } catch (error) {
-    // Handle errors
+    console.error("Registration error:", error);
+    handleRegistrationError(error);
     registerButton.disabled = false;
     registerButton.textContent = 'Create Account';
-    
-    let errorMessage = 'An error occurred. Please try again.';
-    
-    switch(error.code) {
-      case 'auth/email-already-in-use':
-        errorMessage = 'This email is already in use by another account.';
-        emailError.textContent = errorMessage;
-        emailError.style.display = 'block';
-        break;
-      case 'auth/invalid-email':
-        errorMessage = 'The email address is not valid.';
-        emailError.textContent = errorMessage;
-        emailError.style.display = 'block';
-        break;
-      case 'auth/weak-password':
-        errorMessage = 'The password is too weak.';
-        passwordError.textContent = errorMessage;
-        passwordError.style.display = 'block';
-        break;
-      case 'auth/network-request-failed':
-        errorMessage = 'A network error occurred. Please check your connection.';
-        break;
-      default:
-        errorMessage = error.message || 'An unknown error occurred.';
-    }
-    
-    if (!emailError.style.display === 'block') {
-      // If the error isn't email-related, show a generic error
-      const errorElement = document.createElement('div');
-      errorElement.className = 'error-message';
-      errorElement.textContent = errorMessage;
-      errorElement.style.display = 'block';
-      registerForm.insertBefore(errorElement, registerForm.firstChild);
-      
-      // Remove the error after 5 seconds
-      setTimeout(() => {
-        errorElement.remove();
-      }, 5000);
-    }
   }
 });
 
-// Social login handlers (optional)
-document.getElementById('googleSignIn').addEventListener('click', () => {
-  // Implement Google sign-in if needed
-  console.log('Google sign-in clicked');
-});
+// Form validation function
+function validateForm() {
+  let isValid = true;
+  
+  // Reset error messages
+  hideAllErrors();
+  
+  // Validate full name
+  if (fullNameInput.value.trim() === '') {
+    showError(nameError, 'Full name is required');
+    isValid = false;
+  } else if (fullNameInput.value.trim().length < 3) {
+    showError(nameError, 'Name must be at least 3 characters');
+    isValid = false;
+  }
+  
+  // Validate email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (emailInput.value.trim() === '') {
+    showError(emailError, 'Email is required');
+    isValid = false;
+  } else if (!emailRegex.test(emailInput.value)) {
+    showError(emailError, 'Please enter a valid email address');
+    isValid = false;
+  }
+  
+  // Validate password
+  if (passwordInput.value === '') {
+    showError(passwordError, 'Password is required');
+    isValid = false;
+  } else if (passwordInput.value.length < 8) {
+    showError(passwordError, 'Password must be at least 8 characters');
+    isValid = false;
+  }
+  
+  // Validate confirm password
+  if (confirmPasswordInput.value === '') {
+    showError(confirmPasswordError, 'Please confirm your password');
+    isValid = false;
+  } else if (passwordInput.value !== confirmPasswordInput.value) {
+    showError(confirmPasswordError, 'Passwords do not match');
+    isValid = false;
+  }
+  
+  // Validate terms agreement
+  if (!termsCheckbox.checked) {
+    showError(termsError, 'You must agree to the terms and conditions');
+    isValid = false;
+  }
+  
+  return isValid;
+}
 
-document.getElementById('facebookSignIn').addEventListener('click', () => {
-  // Implement Facebook sign-in if needed
-  console.log('Facebook sign-in clicked');
-});
-    
+// Helper functions
+function showError(element, message) {
+  element.textContent = message;
+  element.style.display = 'block';
+}
+
+function hideAllErrors() {
+  nameError.style.display = 'none';
+  emailError.style.display = 'none';
+  passwordError.style.display = 'none';
+  confirmPasswordError.style.display = 'none';
+  termsError.style.display = 'none';
+}
+
+function handleRegistrationError(error) {
+  let errorMessage = 'An error occurred. Please try again.';
+  
+  switch(error.code) {
+    case 'auth/email-already-in-use':
+      errorMessage = 'This email is already registered.';
+      showError(emailError, errorMessage);
+      break;
+    case 'auth/invalid-email':
+      errorMessage = 'The email address is not valid.';
+      showError(emailError, errorMessage);
+      break;
+    case 'auth/weak-password':
+      errorMessage = 'The password is too weak (min 6 characters).';
+      showError(passwordError, errorMessage);
+      break;
+    case 'auth/network-request-failed':
+      errorMessage = 'Network error. Please check your connection.';
+      break;
+    default:
+      errorMessage = error.message || 'An unknown error occurred.';
+  }
+  
+  // Show generic error if not field-specific
+  if (!emailError.style.display === 'block' && !passwordError.style.display === 'block') {
+    alert(errorMessage); // Or show in a generic error element
+  }
+}
+
+// Password toggle functionality
+document.getElementById('registerPasswordToggle').addEventListener('click', togglePasswordVisibility);
+document.getElementById('confirmPasswordToggle').addEventListener('click', togglePasswordVisibility);
+
+function togglePasswordVisibility(e) {
+  const button = e.currentTarget;
+  const input = button.previousElementSibling;
+  const icon = button.querySelector('i');
+  
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.classList.replace('fa-eye', 'fa-eye-slash');
+  } else {
+    input.type = 'password';
+    icon.classList.replace('fa-eye-slash', 'fa-eye');
+  }
+}
+  
+
       
 
 
