@@ -1,4 +1,4 @@
-?//register
+//register
 // Initialize Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyCsJR-aYy0VGSPvb7pXHaK3EmGsJWcvdDo",
@@ -301,3 +301,218 @@ auth.onAuthStateChanged(user => {
     }
 });
   //register finish
+//login logic
+// Login functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Firebase if not already initialized
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    
+    // Login Form Elements
+    const loginForm = document.getElementById('loginForm');
+    const loginEmail = document.getElementById('loginEmail');
+    const loginPassword = document.getElementById('loginPassword');
+    const loginPasswordToggle = document.getElementById('loginPasswordToggle');
+    const rememberMe = document.getElementById('rememberMe');
+    
+    // Check if elements exist (for login page)
+    if (loginPasswordToggle) {
+        // Password toggle functionality for login page
+        loginPasswordToggle.addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            if (loginPassword.type === 'password') {
+                loginPassword.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                loginPassword.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        });
+    }
+    
+    // Handle login form submission
+    if (loginForm) {
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = loginEmail.value.trim();
+            const password = loginPassword.value;
+            const remember = rememberMe.checked;
+            
+            // Set persistence based on "Remember me" checkbox
+            const persistence = remember ? 
+                firebase.auth.Auth.Persistence.LOCAL : 
+                firebase.auth.Auth.Persistence.SESSION;
+            
+            try {
+                // Set persistence before signing in
+                await auth.setPersistence(persistence);
+                
+                // Sign in with email and password
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                // Check if email is verified
+                if (!user.emailVerified) {
+                    await auth.signOut();
+                    showLoginError('Please verify your email before logging in. Check your inbox for the verification link.');
+                    return;
+                }
+                
+                // Update last login timestamp in Firestore
+                await db.collection('users').doc(user.uid).update({
+                    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // Redirect based on user role (you'll need to implement this logic)
+                redirectAfterLogin(user.uid);
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                handleLoginError(error);
+            }
+        });
+    }
+    
+    // Handle social login buttons
+    const socialButtons = document.querySelectorAll('.social-btn');
+    if (socialButtons.length > 0) {
+        // Google login
+        socialButtons[0].addEventListener('click', async function() {
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                const result = await auth.signInWithPopup(provider);
+                const user = result.user;
+                
+                // Check if user is new or existing
+                if (result.additionalUserInfo.isNewUser) {
+                    await db.collection('users').doc(user.uid).set({
+                        fullName: user.displayName || 'Google User',
+                        email: user.email,
+                        photoURL: user.photoURL || '',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                        role: 'customer'
+                    });
+                } else {
+                    await db.collection('users').doc(user.uid).update({
+                        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                
+                redirectAfterLogin(user.uid);
+                
+            } catch (error) {
+                console.error('Google login error:', error);
+                showLoginError('Google login failed. Please try again.');
+            }
+        });
+        
+        // Facebook login
+        socialButtons[1].addEventListener('click', async function() {
+            try {
+                const provider = new firebase.auth.FacebookAuthProvider();
+                const result = await auth.signInWithPopup(provider);
+                const user = result.user;
+                
+                // Check if user is new or existing
+                if (result.additionalUserInfo.isNewUser) {
+                    await db.collection('users').doc(user.uid).set({
+                        fullName: user.displayName || 'Facebook User',
+                        email: user.email,
+                        photoURL: user.photoURL || '',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                        role: 'customer'
+                    });
+                } else {
+                    await db.collection('users').doc(user.uid).update({
+                        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                
+                redirectAfterLogin(user.uid);
+                
+            } catch (error) {
+                console.error('Facebook login error:', error);
+                showLoginError('Facebook login failed. Please try again.');
+            }
+        });
+    }
+    
+    // Forgot password link
+    const forgotPasswordLink = document.querySelector('.forgot-password');
+    if (forgotPasswordLink) {
+        forgotPasswordLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = 'forgotpassword.html';
+        });
+    }
+    
+    // Helper function to show login errors
+    function showLoginError(message) {
+        // You can implement a more sophisticated error display
+        alert(message);
+    }
+    
+    // Helper function to handle different login errors
+    function handleLoginError(error) {
+        let errorMessage = 'Login failed. Please try again.';
+        
+        switch (error.code) {
+            case 'auth/invalid-email':
+                errorMessage = 'Please enter a valid email address.';
+                break;
+            case 'auth/user-disabled':
+                errorMessage = 'This account has been disabled. Please contact support.';
+                break;
+            case 'auth/user-not-found':
+                errorMessage = 'No account found with this email. Please register first.';
+                break;
+            case 'auth/wrong-password':
+                errorMessage = 'Incorrect password. Please try again.';
+                break;
+            case 'auth/too-many-requests':
+                errorMessage = 'Too many failed attempts. Please try again later or reset your password.';
+                break;
+            default:
+                errorMessage = error.message || 'Login failed. Please try again.';
+        }
+        
+        showLoginError(errorMessage);
+    }
+    
+    // Helper function to redirect after successful login
+    async function redirectAfterLogin(userId) {
+        try {
+            // Get user role from Firestore
+            const userDoc = await db.collection('users').doc(userId).get();
+            const userData = userDoc.data();
+            const role = userData?.role || 'customer';
+            
+            // Redirect based on role
+            if (role === 'merchant') {
+                window.location.href = 'merchantdashboard.html';
+            } else {
+                window.location.href = 'userprofile.html';
+            }
+        } catch (error) {
+            console.error('Error getting user role:', error);
+            // Default redirect if there's an error
+            window.location.href = 'userprofile.html';
+        }
+    }
+    
+    // Check if user is already logged in
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            // User is logged in, redirect based on role
+            redirectAfterLogin(user.uid);
+        }
+    });
+});
+// login finish
