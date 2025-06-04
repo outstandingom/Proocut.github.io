@@ -1139,3 +1139,285 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 // add services end 
+//bookservices
+// DOM Elements
+const serviceDetailsSection = document.getElementById('serviceDetails');
+const dateTimeSelectionSection = document.getElementById('dateTimeSelection');
+const confirmBookingSection = document.getElementById('confirmBooking');
+const nextStepBtn = document.getElementById('nextStepBtn');
+const backToServiceBtn = document.getElementById('backToServiceBtn');
+const nextToConfirmBtn = document.getElementById('nextToConfirmBtn');
+const backToTimeBtn = document.getElementById('backToTimeBtn');
+const bookingForm = document.getElementById('bookingForm');
+const timeSlotsContainer = document.getElementById('timeSlotsContainer');
+const bookingDateInput = document.getElementById('bookingDate');
+
+// Service details elements
+const serviceImage = document.getElementById('serviceImage');
+const serviceName = document.getElementById('serviceName');
+const serviceCategory = document.getElementById('serviceCategory');
+const serviceDuration = document.getElementById('serviceDuration');
+const servicePrice = document.getElementById('servicePrice');
+const serviceDescription = document.getElementById('serviceDescription');
+
+// Summary elements
+const summaryServiceName = document.getElementById('summaryServiceName');
+const summaryServiceDuration = document.getElementById('summaryServiceDuration');
+const summaryServicePrice = document.getElementById('summaryServicePrice');
+const summaryDateTime = document.getElementById('summaryDateTime');
+
+// Confirmation elements
+const confirmServiceName = document.getElementById('confirmServiceName');
+const confirmDateTime = document.getElementById('confirmDateTime');
+const confirmDuration = document.getElementById('confirmDuration');
+const confirmPrice = document.getElementById('confirmPrice');
+const bookingNotes = document.getElementById('bookingNotes');
+
+// Payment elements
+const paymentServicePrice = document.getElementById('paymentServicePrice');
+const paymentTotalAmount = document.getElementById('paymentTotalAmount');
+
+// Global variables
+let selectedService = null;
+let selectedDateTime = null;
+let currentUser = null;
+
+// Initialize Flatpickr for date selection
+const datePicker = flatpickr("#bookingDate", {
+    minDate: "today",
+    maxDate: new Date().fp_incr(30), // 30 days from now
+    disable: [
+        function(date) {
+            // Disable Sundays
+            return (date.getDay() === 0);
+        }
+    ],
+    onChange: function(selectedDates) {
+        if (selectedDates.length > 0) {
+            generateTimeSlots();
+            summaryDateTime.textContent = 'Not selected';
+            nextToConfirmBtn.disabled = true;
+        }
+    }
+});
+
+// Initialize the page
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if user is logged in
+    firebase.auth().onAuthStateChanged(function(user) {
+        if (user) {
+            currentUser = user;
+            loadServiceDetails();
+        } else {
+            // Redirect to login if not authenticated
+            window.location.href = 'login.html';
+        }
+    });
+});
+
+// Load service details from URL parameters
+function loadServiceDetails() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const serviceId = urlParams.get('id');
+    
+    if (!serviceId) {
+        showError('No service selected. Redirecting...');
+        setTimeout(() => window.location.href = 'index.html', 2000);
+        return;
+    }
+
+    // Fetch service details from Firestore
+    db.collection('services').doc(serviceId).get()
+        .then(doc => {
+            if (doc.exists) {
+                selectedService = {
+                    id: doc.id,
+                    ...doc.data()
+                };
+                displayServiceDetails(selectedService);
+            } else {
+                showError('Service not found. Redirecting...');
+                setTimeout(() => window.location.href = 'index.html', 2000);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching service:', error);
+            showError('Error loading service details. Please try again.');
+        });
+}
+
+// Display service details on the page
+function displayServiceDetails(service) {
+    serviceImage.src = service.imageUrl || 'https://via.placeholder.com/300x200';
+    serviceName.textContent = service.name;
+    serviceCategory.textContent = service.category;
+    serviceDuration.textContent = `${service.duration} mins`;
+    servicePrice.textContent = `₹${service.price}`;
+    serviceDescription.textContent = service.description || 'No description available.';
+    
+    // Update summary section
+    summaryServiceName.textContent = service.name;
+    summaryServiceDuration.textContent = `${service.duration} mins`;
+    summaryServicePrice.textContent = `₹${service.price}`;
+    
+    // Update confirmation section
+    confirmServiceName.textContent = service.name;
+    confirmDuration.textContent = `${service.duration} mins`;
+    confirmPrice.textContent = `₹${service.price}`;
+    
+    // Update payment section
+    paymentServicePrice.textContent = `₹${service.price}`;
+    paymentTotalAmount.textContent = `₹${service.price}`;
+}
+
+// Generate available time slots
+function generateTimeSlots() {
+    timeSlotsContainer.innerHTML = '';
+    
+    // Salon working hours: 10AM to 8PM
+    const startHour = 10;
+    const endHour = 20;
+    
+    for (let hour = startHour; hour < endHour; hour++) {
+        // Create slots every 30 minutes
+        for (let minutes of ['00', '30']) {
+            const time = `${hour.toString().padStart(2, '0')}:${minutes}`;
+            const timeSlot = document.createElement('div');
+            timeSlot.className = 'time-slot';
+            timeSlot.textContent = time;
+            timeSlot.addEventListener('click', function() {
+                selectTimeSlot(timeSlot, time);
+            });
+            timeSlotsContainer.appendChild(timeSlot);
+        }
+    }
+}
+
+// Handle time slot selection
+function selectTimeSlot(slot, time) {
+    // Deselect all slots
+    document.querySelectorAll('.time-slot').forEach(s => {
+        s.classList.remove('selected');
+    });
+    
+    // Select clicked slot
+    slot.classList.add('selected');
+    
+    // Update selected time
+    const selectedDate = datePicker.selectedDates[0];
+    if (selectedDate) {
+        const [hours, mins] = time.split(':');
+        selectedDate.setHours(parseInt(hours), parseInt(mins));
+        selectedDateTime = selectedDate;
+        
+        summaryDateTime.textContent = selectedDate.toLocaleString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        confirmDateTime.textContent = selectedDate.toLocaleString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        nextToConfirmBtn.disabled = false;
+    }
+}
+
+// Handle form submission for booking
+bookingForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    if (!selectedService || !selectedDateTime) {
+        showError('Please select a service and time slot');
+        return;
+    }
+    
+    if (!document.getElementById('termsAgree').checked) {
+        showError('Please agree to the terms and conditions');
+        return;
+    }
+    
+    // Create booking object
+    const booking = {
+        serviceId: selectedService.id,
+        serviceName: selectedService.name,
+        servicePrice: selectedService.price,
+        userId: currentUser.uid,
+        userName: currentUser.displayName || 'User',
+        dateTime: selectedDateTime,
+        duration: selectedService.duration,
+        notes: bookingNotes.value || '',
+        status: 'confirmed',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    
+    // Save booking to Firestore
+    db.collection('bookings').add(booking)
+        .then(docRef => {
+            showSuccess('Booking confirmed successfully!');
+            // Redirect to bookings page after 2 seconds
+            setTimeout(() => {
+                window.location.href = 'userbookings.html';
+            }, 2000);
+        })
+        .catch(error => {
+            console.error('Error creating booking:', error);
+            showError('Failed to confirm booking. Please try again.');
+        });
+});
+
+// Navigation between steps
+nextStepBtn.addEventListener('click', function() {
+    serviceDetailsSection.style.display = 'none';
+    dateTimeSelectionSection.style.display = 'block';
+    updateStepIndicator(1);
+});
+
+backToServiceBtn.addEventListener('click', function() {
+    dateTimeSelectionSection.style.display = 'none';
+    serviceDetailsSection.style.display = 'block';
+    updateStepIndicator(0);
+});
+
+nextToConfirmBtn.addEventListener('click', function() {
+    dateTimeSelectionSection.style.display = 'none';
+    confirmBookingSection.style.display = 'block';
+    updateStepIndicator(2);
+});
+
+backToTimeBtn.addEventListener('click', function() {
+    confirmBookingSection.style.display = 'none';
+    dateTimeSelectionSection.style.display = 'block';
+    updateStepIndicator(1);
+});
+
+// Update step indicator UI
+function updateStepIndicator(activeIndex) {
+    document.querySelectorAll('.step').forEach((step, index) => {
+        if (index === activeIndex) {
+            step.classList.add('active');
+        } else {
+            step.classList.remove('active');
+        }
+    });
+}
+
+// Show error message
+function showError(message) {
+    // You can implement a more sophisticated error display
+    alert(message);
+}
+
+// Show success message
+function showSuccess(message) {
+    // You can implement a more sophisticated success display
+    alert(message);
+} 
+// bookservices end 
