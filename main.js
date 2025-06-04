@@ -657,3 +657,371 @@ function navigateTo(page) {
     window.location.href = page;
 }  
 //user proifile end
+
+// index.html start
+// Initialize Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyCsJR-aYy0VGSPvb7pXHaK3EmGsJWcvdDo",
+    authDomain: "login-fa2eb.firebaseapp.com",
+    projectId: "login-fa2eb",
+    storageBucket: "login-fa2eb.appspot.com",
+    messagingSenderId: "1093052500996",
+    appId: "1:1093052500996:web:05a13485172c455e93b951",
+    measurementId: "G-9TC2J0YQ3R"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+// Main Application Logic
+document.addEventListener('DOMContentLoaded', function() {
+    // Check authentication state
+    auth.onAuthStateChanged(user => {
+        if (!user && !['login.html', 'register.html', 'forgotpassword.html', 'resetpassword.html'].includes(window.location.pathname.split('/').pop())) {
+            window.location.href = 'login.html';
+        }
+    });
+
+    // Initialize page-specific functionality based on current page
+    const currentPage = window.location.pathname.split('/').pop();
+    
+    switch(currentPage) {
+        case 'index.html':
+        case '':
+            initHomePage();
+            break;
+        case 'login.html':
+            initLoginPage();
+            break;
+        case 'register.html':
+            initRegisterPage();
+            break;
+        case 'userprofile.html':
+            initUserProfilePage();
+            break;
+        case 'userbookings.html':
+            initUserBookingsPage();
+            break;
+        // Add other page initializers as needed
+    }
+});
+
+// ==================== HOME PAGE FUNCTIONALITY ====================
+function initHomePage() {
+    // Location selection functionality
+    const locationModal = document.getElementById('locationModal');
+    if (locationModal) {
+        const locationOptions = document.querySelectorAll('.location-option');
+        const locationText = document.querySelector('.location-text');
+        
+        locationOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                const selectedLocation = this.getAttribute('data-location');
+                locationText.textContent = selectedLocation;
+                localStorage.setItem('selectedLocation', selectedLocation);
+                
+                // Close the modal
+                const modal = bootstrap.Modal.getInstance(locationModal);
+                modal.hide();
+                
+                // Show success feedback
+                showToast('Location updated successfully');
+            });
+        });
+    }
+
+    // Search functionality
+    const searchButton = document.querySelector('.search-button');
+    if (searchButton) {
+        searchButton.addEventListener('click', function() {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput.value.trim() === '') {
+                showToast('Please enter a search term');
+                searchInput.focus();
+                return;
+            }
+            
+            // In a real app, you would filter services based on search term
+            showToast(`Searching for "${searchInput.value}"`);
+            // You would typically redirect to a search results page or filter the current page
+        });
+    }
+
+    // Category filtering
+    const categories = document.querySelectorAll('.category');
+    categories.forEach(category => {
+        category.addEventListener('click', function() {
+            categories.forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            
+            const categoryName = this.textContent.trim();
+            // In a real app, you would filter services based on category
+            showToast(`Showing ${categoryName} services`);
+        });
+    });
+
+    // Service booking buttons
+    const bookButtons = document.querySelectorAll('.service-card .btn-primary');
+    bookButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const serviceCard = this.closest('.service-card');
+            const serviceName = serviceCard.querySelector('h5').textContent;
+            
+            // Check if user is logged in
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    // User is logged in, proceed to booking
+                    window.location.href = `bookservice.html?service=${encodeURIComponent(serviceName)}`;
+                } else {
+                    // User not logged in, redirect to login
+                    window.location.href = 'login.html?redirect=bookservice.html';
+                }
+            });
+        });
+    });
+
+    // Featured banner booking button
+    const featuredBookButton = document.querySelector('.featured-banner .btn-light');
+    if (featuredBookButton) {
+        featuredBookButton.addEventListener('click', function() {
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    window.location.href = 'bookservice.html?service=Premium+Hair+Spa+Treatment';
+                } else {
+                    window.location.href = 'login.html?redirect=bookservice.html';
+                }
+            });
+        });
+    }
+}
+
+// ==================== LOGIN PAGE FUNCTIONALITY ====================
+function initLoginPage() {
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = loginForm.querySelector('input[type="email"]').value;
+            const password = loginForm.querySelector('input[type="password"]').value;
+            
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // Check if there's a redirect parameter
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const redirect = urlParams.get('redirect');
+                    
+                    if (redirect) {
+                        window.location.href = redirect;
+                    } else {
+                        window.location.href = 'index.html';
+                    }
+                })
+                .catch((error) => {
+                    showToast(error.message, 'error');
+                });
+        });
+    }
+
+    // Forgot password link
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    if (forgotPasswordLink) {
+        forgotPasswordLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = 'forgotpassword.html';
+        });
+    }
+
+    // Register link
+    const registerLink = document.getElementById('registerLink');
+    if (registerLink) {
+        registerLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = 'register.html';
+        });
+    }
+}
+
+// ==================== REGISTER PAGE FUNCTIONALITY ====================
+function initRegisterPage() {
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = registerForm.querySelector('input[type="email"]').value;
+            const password = registerForm.querySelector('input[type="password"]').value;
+            const fullName = registerForm.querySelector('input[name="fullName"]').value;
+            
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // Save additional user data to Firestore
+                    return db.collection('users').doc(userCredential.user.uid).set({
+                        fullName: fullName,
+                        email: email,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        userType: 'customer' // Default to customer
+                    });
+                })
+                .then(() => {
+                    showToast('Registration successful!');
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                })
+                .catch((error) => {
+                    showToast(error.message, 'error');
+                });
+        });
+    }
+
+    // Login link
+    const loginLink = document.getElementById('loginLink');
+    if (loginLink) {
+        loginLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = 'login.html';
+        });
+    }
+}
+
+// ==================== USER PROFILE PAGE FUNCTIONALITY ====================
+function initUserProfilePage() {
+    // Tab switching
+    const profileTab = document.getElementById('profileTab');
+    const settingsTab = document.getElementById('settingsTab');
+    const tabItems = document.querySelectorAll('.profile-nav-item');
+
+    tabItems.forEach(tab => {
+        tab.addEventListener('click', function() {
+            tabItems.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            if (this.textContent.trim() === 'Profile') {
+                profileTab.style.display = 'block';
+                settingsTab.style.display = 'none';
+            } else {
+                profileTab.style.display = 'none';
+                settingsTab.style.display = 'block';
+            }
+        });
+    });
+
+    // Logout button
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function() {
+            auth.signOut().then(() => {
+                window.location.href = 'login.html';
+            }).catch((error) => {
+                showToast('Logout failed. Please try again.', 'error');
+            });
+        });
+    }
+
+    // Change Password button
+    const changePasswordBtn = document.getElementById('changePasswordBtn');
+    if (changePasswordBtn) {
+        changePasswordBtn.addEventListener('click', function() {
+            const user = auth.currentUser;
+            if (user && user.email) {
+                auth.sendPasswordResetEmail(user.email)
+                    .then(() => {
+                        showToast('Password reset email sent. Please check your inbox.');
+                    })
+                    .catch((error) => {
+                        showToast(error.message, 'error');
+                    });
+            } else {
+                showToast('No authenticated user found. Please login again.', 'error');
+                window.location.href = 'login.html';
+            }
+        });
+    }
+
+    // Load user data
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            db.collection('users').doc(user.uid).get()
+                .then(doc => {
+                    if (doc.exists) {
+                        const userData = doc.data();
+                        
+                        // Update profile info
+                        document.getElementById('profileName').textContent = userData.fullName || 'User';
+                        document.getElementById('profileEmail').textContent = user.email || '';
+                        document.getElementById('profileFullName').textContent = userData.fullName || 'Not provided';
+                        document.getElementById('profileEmailDetail').textContent = user.email || 'Not provided';
+                        
+                        // Format join date
+                        if (user.metadata && user.metadata.creationTime) {
+                            const joinDate = new Date(user.metadata.creationTime);
+                            document.getElementById('profileJoinDate').textContent = joinDate.toLocaleDateString();
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error("Error loading user data:", error);
+                    showToast('Error loading profile data', 'error');
+                });
+        }
+    });
+}
+
+// ==================== USER BOOKINGS PAGE FUNCTIONALITY ====================
+function initUserBookingsPage() {
+    // This would load and display the user's bookings from Firestore
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            db.collection('bookings')
+                .where('userId', '==', user.uid)
+                .orderBy('bookingDate', 'desc')
+                .get()
+                .then(querySnapshot => {
+                    const bookingsContainer = document.getElementById('bookingsContainer');
+                    
+                    if (querySnapshot.empty) {
+                        bookingsContainer.innerHTML = '<p class="text-muted">You have no bookings yet.</p>';
+                        return;
+                    }
+                    
+                    querySnapshot.forEach(doc => {
+                        const booking = doc.data();
+                        // Create and append booking cards
+                        // This would be more elaborate in a real app
+                        const bookingCard = document.createElement('div');
+                        bookingCard.className = 'booking-card';
+                        bookingCard.innerHTML = `
+                            <h5>${booking.serviceName}</h5>
+                            <p>${booking.bookingDate.toDate().toLocaleString()}</p>
+                            <p>Status: ${booking.status || 'Confirmed'}</p>
+                        `;
+                        bookingsContainer.appendChild(bookingCard);
+                    });
+                })
+                .catch(error => {
+                    console.error("Error loading bookings:", error);
+                    showToast('Error loading bookings', 'error');
+                });
+        }
+    });
+}
+
+// ==================== UTILITY FUNCTIONS ====================
+function showToast(message, type = 'success') {
+    // In a real app, you would implement a proper toast notification system
+    console.log(`${type.toUpperCase()}: ${message}`);
+    alert(message); // Simple fallback
+}
+
+// Helper function to get URL parameters
+function getUrlParameter(name) {
+    name = name.replace(/[[]/, '\\[').replace(/[\]]/, '\\]');
+    const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+    const results = regex.exec(location.search);
+    return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+} 
+//inedex.html logic end
