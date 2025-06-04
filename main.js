@@ -2887,3 +2887,274 @@ function showError(message) {
     }, 3000);
 }
 // merchant bookings end 
+// edit salon 
+// Initialize Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyCsJR-aYy0VGSPvb7pXHaK3EmGsJWcvdDo",
+    authDomain: "login-fa2eb.firebaseapp.com",
+    projectId: "login-fa2eb",
+    storageBucket: "login-fa2eb.appspot.com",
+    messagingSenderId: "1093052500996",
+    appId: "1:1093052500996:web:05a13485172c455e93b951",
+    measurementId: "G-9TC2J0YQ3R"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+// Global variables
+let currentUser = null;
+let currentSalonId = null;
+
+// Auth state management
+auth.onAuthStateChanged(user => {
+    currentUser = user;
+    
+    // Redirect unauthenticated users
+    const currentPage = window.location.pathname.split('/').pop();
+    const publicPages = ['login.html', 'register.html', 'forgotpassword.html', 'resetpassword.html', '404error.html'];
+    
+    if (!user && !publicPages.includes(currentPage)) {
+        window.location.href = 'login.html';
+    }
+    
+    // Load merchant data on merchant pages
+    if (user && currentPage.includes('merchant')) {
+        loadMerchantData();
+    }
+});
+
+// Edit Salon Page Functionality
+function initEditSalonPage() {
+    // Image upload preview
+    document.getElementById('salonImageUpload').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                document.getElementById('salonImagePreview').src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Form submission handler
+    document.getElementById('editSalonForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Get form values
+        const salonName = document.getElementById('salonName').value;
+        const salonDescription = document.getElementById('salonDescription').value;
+        const salonAddress = document.getElementById('salonAddress').value;
+        const salonCity = document.getElementById('salonCity').value;
+        const salonLocation = document.getElementById('salonLocation').value;
+        const openingTime = document.getElementById('openingTime').value;
+        const closingTime = document.getElementById('closingTime').value;
+        const sundayClosed = document.getElementById('sundayClosed').checked;
+        const imageFile = document.getElementById('salonImageUpload').files[0];
+        
+        // Validate required fields
+        if (!salonName || !salonAddress || !salonCity) {
+            showToast('Please fill all required fields', 'error');
+            return;
+        }
+        
+        // Show loading state
+        const submitBtn = document.getElementById('saveSalonBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+        
+        try {
+            let imageUrl = null;
+            
+            // Upload new image if selected
+            if (imageFile) {
+                const storageRef = storage.ref(`salons/${currentUser.uid}/${Date.now()}_${imageFile.name}`);
+                const snapshot = await storageRef.put(imageFile);
+                imageUrl = await snapshot.ref.getDownloadURL();
+            }
+            
+            // Prepare salon data
+            const salonData = {
+                name: salonName,
+                description: salonDescription,
+                address: salonAddress,
+                city: salonCity,
+                location: salonLocation,
+                businessHours: {
+                    opening: openingTime,
+                    closing: closingTime,
+                    sundayClosed: sundayClosed
+                },
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            // Add/update image URL
+            if (imageUrl) salonData.imageUrl = imageUrl;
+            
+            // Update Firestore document
+            await db.collection('salons').doc(currentSalonId).update(salonData);
+            
+            // Show success and redirect
+            showToast('Salon information updated successfully!', 'success');
+            setTimeout(() => {
+                window.location.href = 'merchantprofile.html';
+            }, 1500);
+            
+        } catch (error) {
+            console.error('Error updating salon:', error);
+            showToast('Failed to update salon information', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save Changes';
+        }
+    });
+}
+
+// Load merchant-specific data
+async function loadMerchantData() {
+    try {
+        // Get merchant's salon ID
+        const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        const merchantId = userDoc.data().merchantId;
+        currentSalonId = merchantId;
+        
+        // Load salon data for edit page
+        if (window.location.pathname.includes('editsalon.html')) {
+            const salonDoc = await db.collection('salons').doc(merchantId).get();
+            if (salonDoc.exists) {
+                const salonData = salonDoc.data();
+                
+                // Pre-fill form with existing data
+                document.getElementById('salonName').value = salonData.name || '';
+                document.getElementById('salonDescription').value = salonData.description || '';
+                document.getElementById('salonAddress').value = salonData.address || '';
+                document.getElementById('salonCity').value = salonData.city || '';
+                document.getElementById('salonLocation').value = salonData.location || '';
+                
+                // Set business hours
+                if (salonData.businessHours) {
+                    document.getElementById('openingTime').value = salonData.businessHours.opening || '10:00';
+                    document.getElementById('closingTime').value = salonData.businessHours.closing || '20:00';
+                    document.getElementById('sundayClosed').checked = salonData.businessHours.sundayClosed || false;
+                }
+                
+                // Set salon image
+                if (salonData.imageUrl) {
+                    document.getElementById('salonImagePreview').src = salonData.imageUrl;
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error loading merchant data:', error);
+        showToast('Error loading salon information', 'error');
+    }
+}
+
+// Toast notification system
+function showToast(message, type = 'success') {
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `custom-toast toast-${type}`;
+    toast.innerHTML = `
+        <div class="toast-content">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    // Add to DOM
+    document.body.appendChild(toast);
+    
+    // Show toast
+    setTimeout(() => toast.classList.add('show'), 10);
+    
+    // Remove after delay
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Initialize page-specific functionality
+function initPage() {
+    const currentPage = window.location.pathname.split('/').pop();
+    
+    // Initialize page-specific functionality
+    switch(currentPage) {
+        case 'editsalon.html':
+            initEditSalonPage();
+            break;
+        // Add other page initializers as needed
+    }
+    
+    // Back button functionality
+    document.querySelectorAll('.fa-arrow-left').forEach(btn => {
+        btn.addEventListener('click', () => history.back());
+    });
+    
+    // Bottom navigation
+    document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            this.classList.add('active');
+            window.location.href = this.getAttribute('href');
+        });
+    });
+}
+
+// Add toast styles dynamically
+function addToastStyles() {
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .custom-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            color: #333;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            z-index: 1000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .custom-toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .custom-toast .toast-content {
+            display: flex;
+            align-items: center;
+        }
+        
+        .custom-toast i {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+        
+        .toast-success {
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .toast-error {
+            border-left: 4px solid #F44336;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', () => {
+    addToastStyles();
+    initPage();
+});
+// edit saloon end
