@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProCut | My Profile</title>
+    <title>SalonFinder | My Profile</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        :root {
+        root {
             --primary: #000;
             --secondary: #8a6d3b;
             --light: #f9f9f9;
@@ -125,14 +125,15 @@
             width: 50px;
             height: 25px;
         }
-    </style>
+
+        </style>
 </head>
 <body>
     <!-- Header Section -->
     <header class="sticky-top bg-white shadow-sm">
         <div class="container py-3">
             <div class="d-flex justify-content-between align-items-center">
-                <div class="logo">Pro<span>Cut</span></div>
+                <div class="logo">Salon<span>Finder</span></div>
                 <div class="d-flex align-items-center">
                     <i class="fas fa-bell me-3" style="font-size: 20px;"></i>
                 </div>
@@ -154,7 +155,6 @@
         <div class="profile-nav">
             <div class="profile-nav-item active">Profile</div>
             <div class="profile-nav-item">Settings</div>
-            <div class="profile-nav-item">Preferences</div>
         </div>
         
         <!-- Profile Tab -->
@@ -173,40 +173,8 @@
                 </div>
                 
                 <div class="profile-detail">
-                    <div class="profile-detail-label">Phone Number</div>
-                    <div class="profile-detail-value" id="profilePhone">Not provided</div>
-                </div>
-                
-                <div class="profile-detail">
                     <div class="profile-detail-label">Member Since</div>
                     <div class="profile-detail-value" id="profileJoinDate">Loading...</div>
-                </div>
-            </div>
-            
-            <div class="profile-card">
-                <h5 class="profile-card-title">Account Type</h5>
-                
-                <div class="profile-detail">
-                    <div class="profile-detail-label">Current Account Type</div>
-                    <div class="profile-detail-value" id="accountType">Customer</div>
-                </div>
-                
-                <div id="customerActions">
-                    <button class="btn btn-primary w-100" id="becomeMerchantBtn">
-                        Become a Merchant
-                    </button>
-                    <p class="text-muted small mt-2">
-                        Register your salon and start accepting bookings from customers.
-                    </p>
-                </div>
-                
-                <div id="merchantActions" style="display: none;">
-                    <button class="btn btn-outline-secondary w-100" id="manageSalonBtn">
-                        Manage My Salon
-                    </button>
-                    <p class="text-muted small mt-2">
-                        You are registered as a merchant. Manage your salon profile and services.
-                    </p>
                 </div>
             </div>
         </div>
@@ -222,77 +190,12 @@
                         Change Password
                     </button>
                 </div>
-                
-                <div class="profile-detail">
-                    <div class="profile-detail-label">Notification Preferences</div>
-                    <div class="switch-container">
-                        <span>Email Notifications</span>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
-                        </div>
-                    </div>
-                    <div class="switch-container mt-2">
-                        <span>Push Notifications</span>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="pushNotifications" checked>
-                        </div>
-                    </div>
-                </div>
             </div>
             
             <div class="profile-card">
-                <h5 class="profile-card-title">Danger Zone</h5>
-                
-                <button class="btn btn-outline-danger w-100 mb-3" id="deleteAccountBtn">
-                    Delete My Account
-                </button>
-                <p class="text-muted small">
-                    Warning: This action cannot be undone. All your data will be permanently deleted.
-                </p>
-            </div>
-        </div>
-        
-        <!-- Preferences Tab (hidden by default) -->
-        <div id="preferencesTab" style="display: none;">
-            <div class="profile-card">
-                <h5 class="profile-card-title">Booking Preferences</h5>
-                
-                <div class="profile-detail">
-                    <div class="profile-detail-label">Default Location</div>
-                    <select class="form-select" id="defaultLocation">
-                        <option selected>Neelbad Rd, Bhopal</option>
-                        <option>MP Nagar, Bhopal</option>
-                        <option>New Market, Bhopal</option>
-                        <option>Arera Colony, Bhopal</option>
-                    </select>
-                </div>
-                
-                <div class="profile-detail">
-                    <div class="profile-detail-label">Preferred Stylist</div>
-                    <select class="form-select" id="preferredStylist">
-                        <option selected>No preference</option>
-                        <option>Rahul Sharma</option>
-                        <option>Priya Patel</option>
-                        <option>Amit Kumar</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="profile-card">
-                <h5 class="profile-card-title">Payment Methods</h5>
-                
-                <div class="profile-detail">
-                    <div class="profile-detail-label">Default Payment Method</div>
-                    <select class="form-select" id="defaultPayment">
-                        <option selected>Credit/Debit Card</option>
-                        <option>PayPal</option>
-                        <option>UPI</option>
-                        <option>Cash on Service</option>
-                    </select>
-                </div>
-                
-                <button class="btn btn-outline-secondary w-100 mt-3" id="managePaymentBtn">
-                    Manage Payment Methods
+                <h5 class="profile-card-title">Session</h5>
+                <button class="btn btn-outline-danger w-100 mb-3" id="logoutBtn">
+                    Logout
                 </button>
             </div>
         </div>
@@ -337,34 +240,76 @@
                 // Show the corresponding tab content
                 document.getElementById('profileTab').style.display = 'none';
                 document.getElementById('settingsTab').style.display = 'none';
-                document.getElementById('preferencesTab').style.display = 'none';
                 
                 if (this.textContent === 'Profile') {
                     document.getElementById('profileTab').style.display = 'block';
                 } else if (this.textContent === 'Settings') {
                     document.getElementById('settingsTab').style.display = 'block';
-                } else if (this.textContent === 'Preferences') {
-                    document.getElementById('preferencesTab').style.display = 'block';
                 }
             });
         });
         
-        // Become Merchant button
-        document.getElementById('becomeMerchantBtn').addEventListener('click', function() {
-            window.location.href = 'merchantregister.html';
+        // Logout button
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            firebase.auth().signOut().then(() => {
+                window.location.href = 'login.html';
+            }).catch((error) => {
+                console.error('Logout error:', error);
+                alert('Error during logout. Please try again.');
+            });
         });
         
         // Change Password button
         document.getElementById('changePasswordBtn').addEventListener('click', function() {
-            alert('Password change functionality will be implemented here.');
+            const user = firebase.auth().currentUser;
+            const email = user.email;
+            
+            firebase.auth().sendPasswordResetEmail(email).then(() => {
+                alert('Password reset email sent. Please check your inbox.');
+            }).catch((error) => {
+                console.error('Password reset error:', error);
+                alert('Error sending password reset email. Please try again.');
+            });
         });
         
-        // Delete Account button
-        document.getElementById('deleteAccountBtn').addEventListener('click', function() {
-            if (confirm('Are you sure you want to delete your account? This cannot be undone.')) {
-                alert('Account deletion functionality will be implemented here.');
+        // Load user data
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                // User is signed in
+                const db = firebase.firestore();
+                
+                // Get user data from Firestore
+                db.collection('users').doc(user.uid).get().then((doc) => {
+                    if (doc.exists) {
+                        const userData = doc.data();
+                        
+                        // Update profile info
+                        document.getElementById('profileName').textContent = userData.fullName;
+                        document.getElementById('profileEmail').textContent = user.email;
+                        document.getElementById('profileFullName').textContent = userData.fullName;
+                        document.getElementById('profileEmailDetail').textContent = user.email;
+                        
+                        // Format join date
+                        const joinDate = new Date(user.metadata.creationTime);
+                        document.getElementById('profileJoinDate').textContent = joinDate.toLocaleDateString();
+                        
+                        // Set profile image if available
+                        if (userData.photoURL) {
+                            document.getElementById('profileImage').src = userData.photoURL;
+                        }
+                    } else {
+                        console.log("No such document!");
+                    }
+                }).catch((error) => {
+                    console.log("Error getting document:", error);
+                });
+            } else {
+                // No user is signed in, redirect to login
+                window.location.href = 'login.html';
             }
         });
     </script>
 </body>
 </html>
+    
+    
