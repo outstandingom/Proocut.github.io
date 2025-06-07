@@ -177,15 +177,9 @@
                         <input type="text" class="form-control" id="salonCity" placeholder="City" required>
                     </div>
                     <div class="col-md-6">
-                        <label for="salonLocation" class="form-label">Location</label>
-                        <select class="form-select" id="salonLocation" required>
-                            <option value="">Select location</option>
-                            <option>Neelbad Rd, Bhopal</option>
-                            <option>MP Nagar, Bhopal</option>
-                            <option>New Market, Bhopal</option>
-                            <option>Arera Colony, Bhopal</option>
-                            <option>Kolar Road, Bhopal</option>
-                        </select>
+                   < label for="mapLink">Enter your Google Maps location link:</label><br><br>
+    <input type="url" id="mapLink" name="mapLink" placeholder="https://maps.app.goo.gl/..." required style="width: 100%; max-width: 400px;"><br><br>
+    <button type="submit">Submit</button>
                     </div>
                 </div>
             </div>
@@ -196,12 +190,12 @@
                 
                 <img id="salonImagePreview" class="salon-image-preview" alt="Salon preview">
                 
-                <label for="salonImageUpload" class="upload-btn">
+                <label for="salonImageUplink" class="-btn">
                     <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i>
                     <div>Upload Salon Image</div>
                     <small class="text-muted">Recommended size: 800x600px</small>
                 </label>
-                <input type="file" id="salonImageUpload" accept="image/*" style="display: none;">
+                <input type="url" id="salonImagelink" accept="image/*" style="display: none;">
             </div>
             
             <!-- Contact Information -->
@@ -257,16 +251,33 @@
             </div>
             
             <!-- Services Offered -->
+
             <div class="merchant-card">
-                <h5 class="merchant-card-title">Services Offered</h5>
-                
-                <div id="servicesList">
-                    <!-- Services will be added here dynamically -->
-                </div>
-                
-                <button type="button" class="btn btn-outline-secondary w-100 mt-3" id="addServiceBtn">
-                    <i class="fas fa-plus me-2"></i> Add Service
+    <h5 class="merchant-card-title">Services Offered</h5>
+    
+    <div id="servicesList">
+        <!-- Services will be added here dynamically -->
+    </div>
+    
+    <div class="service-input-form mt-3" id="serviceInputForm" style="display: none;">
+        <div class="row g-2">
+            <div class="col-md-6">
+                <input type="text" class="form-control" id="serviceNameInput" placeholder="Service name (e.g. Haircut)">
+            </div>
+            <div class="col-md-4">
+                <input type="number" class="form-control" id="servicePriceInput" placeholder="Price (e.g. 50)">
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-success w-100" id="saveServiceBtn">
+                    <i class="fas fa-check"></i>
                 </button>
+            </div>
+        </div>
+    </div>
+    
+    <button type="button" class="btn btn-outline-secondary w-100 mt-3" id="addServiceBtn">
+        <i class="fas fa-plus me-2"></i> Add Service
+    </button>
             </div>
             
             <!-- Terms & Conditions -->
